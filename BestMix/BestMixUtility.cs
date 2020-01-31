@@ -45,6 +45,10 @@ namespace BestMix
             list.AddDistinct("HVY");
             list.AddDistinct("LGT");
             list.AddDistinct("FLM");
+            list.AddDistinct("PTB");
+            list.AddDistinct("PTS");
+            list.AddDistinct("INH");
+            list.AddDistinct("INC");
             return list;
         }
 
@@ -68,6 +72,10 @@ namespace BestMix
                 case "HVY": BMixIconPath += "Heaviest"; break;
                 case "LGT": BMixIconPath += "Lightest"; break;
                 case "FLM": BMixIconPath += "Ignition"; break;
+                case "PTB": BMixIconPath += "ProtectBlunt"; break;
+                case "PTS": BMixIconPath += "ProtectSharp"; break;
+                case "INH": BMixIconPath += "InsulateHeat"; break;
+                case "INC": BMixIconPath += "InsulateCold"; break;
                 default: BMixIconPath += "Nearest"; break;
             }
             
@@ -93,6 +101,10 @@ namespace BestMix
                 case "HVY": ModeDisplay = "BestMix.ModeMassHVY".Translate(); break;
                 case "LGT": ModeDisplay = "BestMix.ModeMassLGT".Translate(); break;
                 case "FLM": ModeDisplay = "BestMix.ModeFlammableFLM".Translate(); break;
+                case "PTB": ModeDisplay = "BestMix.ModeProtectPTB".Translate(); break;
+                case "PTS": ModeDisplay = "BestMix.ModeProtectPTS".Translate(); break;
+                case "INH": ModeDisplay = "BestMix.ModeInsulateINH".Translate(); break;
+                case "INC": ModeDisplay = "BestMix.ModeInsulateINC".Translate(); break;
                 default: ModeDisplay = "BestMix.ModeDistanceDIS".Translate(); break;
             }
             return ModeDisplay;
@@ -257,6 +269,38 @@ namespace BestMix
                     {
                         float num = t1.GetStatValue(StatDefOf.Flammability);
                         float value = t2.GetStatValue(StatDefOf.Flammability);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "PTB":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                        float value = t2.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "PTS":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        float value = t2.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "INH":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                        float value = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "INC":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
+                        float value = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
                         return (num.CompareTo(value));
                     };
                     break;
