@@ -23,10 +23,14 @@ namespace BestMix
         static IntVec3 rootCell;
         public static void DoPatch(HarmonyInstance HMinstance, CustomAction.RefAction<List<Thing>, Thing, IntVec3> refAction)
         {
-            var original = AccessTools.Method(typeof(WorkGiver_DoBill), "<>m__3");
-            var prefix = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Prefix_ResourceGetter");
+            var innerType = AccessTools.FirstInner(typeof(WorkGiver_DoBill), t => t.Name.Contains("AnonStorey1"));
+            var innerMethod = AccessTools.FirstMethod(innerType, method => method.Name.Contains("m__3"));
             var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_bracket_m__3");
-            HMinstance.Patch(original, new HarmonyMethod(prefix), null, new HarmonyMethod(transpiler));
+            HMinstance.Patch(innerMethod, null, null, new HarmonyMethod(transpiler));
+
+            var original = AccessTools.Method(typeof(WorkGiver_DoBill), "TryFindBestBillIngredients");
+            var prefix = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Prefix_ResourceGetter");
+            HMinstance.Patch(original, new HarmonyMethod(prefix));
 
             Patch_WorkGiver_DoBill.refAction = refAction;
         }
