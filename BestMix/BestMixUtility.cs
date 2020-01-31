@@ -40,6 +40,11 @@ namespace BestMix
             list.AddDistinct("FRZ");
             list.AddDistinct("RND");
             list.AddDistinct("BIT");
+            list.AddDistinct("BTY");
+            list.AddDistinct("UGY");
+            list.AddDistinct("HVY");
+            list.AddDistinct("LGT");
+            list.AddDistinct("FLM");
             return list;
         }
 
@@ -58,6 +63,11 @@ namespace BestMix
                 case "FRZ": BMixIconPath += "Coldest"; break;
                 case "RND": BMixIconPath += "Random"; break;
                 case "BIT": BMixIconPath += "Fraction"; break;
+                case "BTY": BMixIconPath += "Beauty"; break;
+                case "UGY": BMixIconPath += "Duckling"; break;
+                case "HVY": BMixIconPath += "Heaviest"; break;
+                case "LGT": BMixIconPath += "Lightest"; break;
+                case "FLM": BMixIconPath += "Ignition"; break;
                 default: BMixIconPath += "Nearest"; break;
             }
             
@@ -78,6 +88,11 @@ namespace BestMix
                 case "TMP": ModeDisplay = "BestMix.ModeTemperatureTMP".Translate(); break;
                 case "FRZ": ModeDisplay = "BestMix.ModeTemperatureFRZ".Translate(); break;
                 case "BIT": ModeDisplay = "BestMix.ModeFractionBIT".Translate(); break;
+                case "BTY": ModeDisplay = "BestMix.ModeBeautyBTY".Translate(); break;
+                case "UGY": ModeDisplay = "BestMix.ModeBeautyUGY".Translate(); break;
+                case "HVY": ModeDisplay = "BestMix.ModeMassHVY".Translate(); break;
+                case "LGT": ModeDisplay = "BestMix.ModeMassLGT".Translate(); break;
+                case "FLM": ModeDisplay = "BestMix.ModeFlammableFLM".Translate(); break;
                 default: ModeDisplay = "BestMix.ModeDistanceDIS".Translate(); break;
             }
             return ModeDisplay;
@@ -105,7 +120,6 @@ namespace BestMix
                 }
             }
 
-            Log.Message("Mix Mode: " + BMixMode); // debug
             Comparison<Thing> comparison = null;
             switch (BMixMode)
             {
@@ -201,6 +215,48 @@ namespace BestMix
                     {
                         float num = (((Math.Max(1, t1.def.stackLimit)) / (Math.Max(1, t1.def.stackLimit))) * RNDFloat());
                         float value = (((Math.Max(1, t2.def.stackLimit)) / (Math.Max(1, t2.def.stackLimit))) * RNDFloat());
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "BTY":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.Beauty);
+                        float value = t2.GetStatValue(StatDefOf.Beauty);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "UGY":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float maxVal = 99999f;
+                        float num = (maxVal - t1.GetStatValue(StatDefOf.Beauty));
+                        float value = (maxVal - t2.GetStatValue(StatDefOf.Beauty));
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "HVY":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.Mass);
+                        float value = t2.GetStatValue(StatDefOf.Mass);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "LGT":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float maxVal = 999999f;
+                        float num = (maxVal - t1.GetStatValue(StatDefOf.Mass));
+                        float value = (maxVal - t2.GetStatValue(StatDefOf.Mass));
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "FLM":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t1.GetStatValue(StatDefOf.Flammability);
+                        float value = t2.GetStatValue(StatDefOf.Flammability);
                         return (num.CompareTo(value));
                     };
                     break;
