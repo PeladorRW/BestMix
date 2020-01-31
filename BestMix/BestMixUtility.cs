@@ -39,6 +39,7 @@ namespace BestMix
             list.AddDistinct("TMP");
             list.AddDistinct("FRZ");
             list.AddDistinct("RND");
+            list.AddDistinct("BIT");
             return list;
         }
 
@@ -56,6 +57,7 @@ namespace BestMix
                 case "TMP": BMixIconPath += "Warmest"; break;
                 case "FRZ": BMixIconPath += "Coldest"; break;
                 case "RND": BMixIconPath += "Random"; break;
+                case "BIT": BMixIconPath += "Fraction"; break;
                 default: BMixIconPath += "Nearest"; break;
             }
             
@@ -75,6 +77,7 @@ namespace BestMix
                 case "RND": ModeDisplay = "BestMix.ModeRandomRND".Translate(); break;
                 case "TMP": ModeDisplay = "BestMix.ModeTemperatureTMP".Translate(); break;
                 case "FRZ": ModeDisplay = "BestMix.ModeTemperatureFRZ".Translate(); break;
+                case "BIT": ModeDisplay = "BestMix.ModeFractionBIT".Translate(); break;
                 default: ModeDisplay = "BestMix.ModeDistanceDIS".Translate(); break;
             }
             return ModeDisplay;
@@ -141,12 +144,12 @@ namespace BestMix
                         float num = 1f;
                         if (t1.def.useHitPoints)
                         {
-                            num = (t1.MaxHitPoints - t1.HitPoints) / t1.MaxHitPoints;
+                            num = ((t1.MaxHitPoints - t1.HitPoints) / (Math.Max(1, t1.MaxHitPoints)));
                         }
                         float value = 1f;
                         if (t2.def.useHitPoints)
                         {
-                            value = (t2.MaxHitPoints - t2.HitPoints) / t2.MaxHitPoints;
+                            value = ((t2.MaxHitPoints - t2.HitPoints) / (Math.Max(1, t2.MaxHitPoints)));
                         }
                         return (num.CompareTo(value));
                     };
@@ -172,7 +175,7 @@ namespace BestMix
                     comparison = delegate (Thing t1, Thing t2)
                     {
                         float num = t1.AmbientTemperature;
-                        float value = t1.AmbientTemperature;
+                        float value = t2.AmbientTemperature;
                         return (num.CompareTo(value));
                     };
                     break;
@@ -181,15 +184,23 @@ namespace BestMix
                     {
                         float maxVal = 999999;
                         float num = (maxVal - t1.AmbientTemperature);
-                        float value = (maxVal - t1.AmbientTemperature);
+                        float value = (maxVal - t2.AmbientTemperature);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "BIT":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = (t1.def.stackLimit / (Math.Max(1, t1.stackCount)));
+                        float value = (t2.def.stackLimit / (Math.Max(1, t2.stackCount)));
                         return (num.CompareTo(value));
                     };
                     break;
                 case "RND":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (t1.thingIDNumber / t1.thingIDNumber) * RNDFloat();
-                        float value = (t1.thingIDNumber / t1.thingIDNumber) * RNDFloat();
+                        float num = (((Math.Max(1, t1.def.stackLimit)) / (Math.Max(1, t1.def.stackLimit))) * RNDFloat());
+                        float value = (((Math.Max(1, t2.def.stackLimit)) / (Math.Max(1, t2.def.stackLimit))) * RNDFloat());
                         return (num.CompareTo(value));
                     };
                     break;
