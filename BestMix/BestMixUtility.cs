@@ -113,6 +113,7 @@ namespace BestMix
         public static void GetBMixComparer(ref List<Thing> listToSort, Thing billGiver, IntVec3 rootCell)
         {
             string BMixMode = "DIS";
+            bool BMixDebugBench = false;
             if (Controller.Settings.AllowBestMix)
             {
                 if (billGiver is Building b)
@@ -121,6 +122,7 @@ namespace BestMix
                     if (compBM != null)
                     {
                         BMixMode = compBM.CurMode;
+                        BMixDebugBench = compBM.BMixDebug;
                         if (Controller.Settings.AllowMealMakersOnly)
                         {
                             if (!((billGiver.def?.building != null && billGiver.def.building.isMealSource)))
@@ -159,23 +161,23 @@ namespace BestMix
                         {
                             t2dtr = t2comp.TicksUntilRotAtCurrentTemp;
                         }
-                        float num = (maxdtr - t1dtr);
-                        float value = (maxdtr - t2dtr);
+                        float num = (maxdtr - t2dtr);
+                        float value = (maxdtr - t1dtr);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "HPT":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = 1f;
-                        if (t1.def.useHitPoints)
-                        {
-                            num = ((t1.MaxHitPoints - t1.HitPoints) / (Math.Max(1, t1.MaxHitPoints)));
-                        }
-                        float value = 1f;
+                        float num = 0f;
                         if (t2.def.useHitPoints)
                         {
-                            value = ((t2.MaxHitPoints - t2.HitPoints) / (Math.Max(1, t2.MaxHitPoints)));
+                            num = ((t2.MaxHitPoints - t2.HitPoints) / (Math.Max(1, t2.MaxHitPoints)));
+                        }
+                        float value = 0f;
+                        if (t1.def.useHitPoints)
+                        {
+                            value = ((t1.MaxHitPoints - t1.HitPoints) / (Math.Max(1, t1.MaxHitPoints)));
                         }
                         return (num.CompareTo(value));
                     };
@@ -183,124 +185,120 @@ namespace BestMix
                 case "VLC":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float maxVal = 99999999;
-                        float num = (maxVal - t1.MarketValue);
-                        float value = (maxVal - t2.MarketValue);
+                        float num = (0f - t2.MarketValue);
+                        float value = (0f - t1.MarketValue);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "VLE":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.MarketValue;
-                        float value = t2.MarketValue;
+                        float num = t2.MarketValue;
+                        float value = t1.MarketValue;
                         return (num.CompareTo(value));
                     };
                     break;
                 case "TMP":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.AmbientTemperature;
-                        float value = t2.AmbientTemperature;
+                        float num = t2.AmbientTemperature;
+                        float value = t1.AmbientTemperature;
                         return (num.CompareTo(value));
                     };
                     break;
                 case "FRZ":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float maxVal = 999999;
-                        float num = (maxVal - t1.AmbientTemperature);
-                        float value = (maxVal - t2.AmbientTemperature);
+                        float num = (0f - t2.AmbientTemperature);
+                        float value = (0f - t1.AmbientTemperature);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "BIT":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (t1.def.stackLimit / (Math.Max(1, t1.stackCount)));
-                        float value = (t2.def.stackLimit / (Math.Max(1, t2.stackCount)));
+                        float num = (t2.def.stackLimit / (Math.Max(1, t2.stackCount)));
+                        float value = (t1.def.stackLimit / (Math.Max(1, t1.stackCount)));
                         return (num.CompareTo(value));
                     };
                     break;
                 case "RND":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (((Math.Max(1, t1.def.stackLimit)) / (Math.Max(1, t1.def.stackLimit))) * RNDFloat());
-                        float value = (((Math.Max(1, t2.def.stackLimit)) / (Math.Max(1, t2.def.stackLimit))) * RNDFloat());
+                        float num = (((Math.Max(1, t2.def.stackLimit)) / (Math.Max(1, t2.def.stackLimit))) * RNDFloat());
+                        float value = (((Math.Max(1, t1.def.stackLimit)) / (Math.Max(1, t1.def.stackLimit))) * RNDFloat());
                         return (num.CompareTo(value));
                     };
                     break;
                 case "BTY":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.Beauty);
-                        float value = t2.GetStatValue(StatDefOf.Beauty);
+                        float num = t2.GetStatValue(StatDefOf.Beauty);
+                        float value = t1.GetStatValue(StatDefOf.Beauty);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "UGY":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float maxVal = 99999f;
-                        float num = (maxVal - t1.GetStatValue(StatDefOf.Beauty));
-                        float value = (maxVal - t2.GetStatValue(StatDefOf.Beauty));
+                        float num = (0f - t2.GetStatValue(StatDefOf.Beauty));
+                        float value = (0f - t1.GetStatValue(StatDefOf.Beauty));
                         return (num.CompareTo(value));
                     };
                     break;
                 case "HVY":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.Mass);
-                        float value = t2.GetStatValue(StatDefOf.Mass);
+                        float num = t2.GetStatValue(StatDefOf.Mass);
+                        float value = t1.GetStatValue(StatDefOf.Mass);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "LGT":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float maxVal = 999999f;
-                        float num = (maxVal - t1.GetStatValue(StatDefOf.Mass));
-                        float value = (maxVal - t2.GetStatValue(StatDefOf.Mass));
+                        float num = (0f - t2.GetStatValue(StatDefOf.Mass));
+                        float value = (0f - t1.GetStatValue(StatDefOf.Mass));
                         return (num.CompareTo(value));
                     };
                     break;
                 case "FLM":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.Flammability);
-                        float value = t2.GetStatValue(StatDefOf.Flammability);
+                        float num = t2.GetStatValue(StatDefOf.Flammability);
+                        float value = t1.GetStatValue(StatDefOf.Flammability);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "PTB":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
-                        float value = t2.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "PTS":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
-                        float value = t2.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "INH":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
-                        float value = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "INC":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
-                        float value = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
                         return (num.CompareTo(value));
                     };
                     break;
@@ -314,7 +312,99 @@ namespace BestMix
                     break;
             }
             listToSort.Sort(comparison);
+
+            //list debugger
+            if (BMixDebugBench)
+            {
+                if (listToSort.Count > 0)
+                {
+                    for (int i=0; i < listToSort.Count; i++)
+                    {
+                        Thing thing = listToSort[i];
+                        string debugMsg = MakeDebugString(i, thing, billGiver, rootCell, BMixMode);
+                        Log.Message(debugMsg, true);
+                    }
+                }
+            }
+
             return;
+        }
+
+        public static string MakeDebugString(int indx, Thing thing, Thing billGiver, IntVec3 rootCell, string BMixMode)
+        {
+            float stat = 0f;
+            switch(BMixMode)
+            {
+                case "DIS": stat = (thing.Position - rootCell).LengthHorizontalSquared; break;
+                case "DTR": float maxdtr = 72000000;
+                    float thingdtr = maxdtr;
+                    CompRottable thingcomp = thing.TryGetComp<CompRottable>();
+                    if (thingcomp != null)
+                    {
+                        thingdtr = thingcomp.TicksUntilRotAtCurrentTemp;
+                    }
+                    stat = (maxdtr - thingdtr);
+                    break;
+                case "HPT":
+                    stat = 0f;
+                    if (thing.def.useHitPoints)
+                    {
+                        stat = ((thing.MaxHitPoints - thing.HitPoints) / (Math.Max(1, thing.MaxHitPoints)));
+                    }
+                    break;
+                case "VLC":
+                    stat = (0f - thing.MarketValue);
+                    break;
+                case "VLE":
+                    stat = thing.MarketValue;
+                    break;
+                case "TMP":
+                    stat = thing.AmbientTemperature;
+                    break;
+                case "FRZ":
+                    stat = (0f - thing.AmbientTemperature);
+                    break;
+                case "BIT":
+                    stat = (thing.def.stackLimit / (Math.Max(1, thing.stackCount)));
+                    break;
+                case "RND":
+                    stat = (((Math.Max(1, thing.def.stackLimit)) / (Math.Max(1, thing.def.stackLimit))) * RNDFloat());
+                    break;
+                case "BTY":
+                    stat = thing.GetStatValue(StatDefOf.Beauty);
+                    break;
+                case "UGY":
+                    stat = (0f - thing.GetStatValue(StatDefOf.Beauty));
+                    break;
+                case "HVY":
+                    stat = thing.GetStatValue(StatDefOf.Mass);
+                    break;
+                case "LGT":
+                    stat = (0f - thing.GetStatValue(StatDefOf.Mass));
+                    break;
+                case "FLM":
+                    stat = thing.GetStatValue(StatDefOf.Flammability);
+                    break;
+                case "PTB":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                    break;
+                case "PTS":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                    break;
+                case "INH":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                    break;
+                case "INC":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
+                    break;
+                default:
+                    stat = 0f;
+                    break;
+            }
+
+            string debugPos = "(" + thing.Position.x.ToString() + ", " + thing.Position.z.ToString() + ")";
+            string debugMsg = "Debug " + BMixMode + " " + indx.ToString() + " " + billGiver.ThingID + " " + thing.LabelShort + " " + debugPos + " " + stat.ToString("F2");
+            return debugMsg;
         }
 
     }
