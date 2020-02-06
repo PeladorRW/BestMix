@@ -13,6 +13,8 @@ namespace BestMix
     {
         #region static methods and fields
         public static RegionProcessorSubtitution singleton { get; private set; }
+        public static readonly string FetchLocalFieldsMethodName = nameof(FetchLocalFields);
+        public static readonly string FetchStaticFieldsMethodName = nameof(FetchStaticFields);
 
         public static void Initialize(RegionProcessorSubtitution instance)
         {
@@ -53,33 +55,40 @@ namespace BestMix
         }
 
         // called by reflection, connected by Patch_WorkGiver_DoBill
-        private void FetchData(List<ThingCount> _chosenIngThings,
-                               List<Thing> _relevantThings,
-                               HashSet<Thing> _processedThings,
-                               List<Thing> _newReleventThings,
-                               List<IngredientCount> _ingredientsOrdered,
-                               int _adjacentRegionsAvailable,
-                               int _regionsProcessed,
-                               IntVec3 _rootCell,
-                               Bill _bill,
-                               Pawn _pawn,
-                               Thing _billGiver,
-                               List<ThingCount> _chosen,
-                               bool _foundAll)
+        // lf = local field, p = parameter
+        private void FetchStaticFields(List<ThingCount> _chosenIngThings,
+                                       List<Thing> _relevantThings,
+                                       HashSet<Thing> _processedThings,
+                                       List<Thing> _newRelevantThings,
+                                       List<IngredientCount> _ingredientsOrdered)
         {
+            //get by harmony
             this.chosenIngThings = _chosenIngThings;
             this.relevantThings = _relevantThings;
             this.processedThings = _processedThings;
-            this.newRelevantThings = _newReleventThings;
+            this.newRelevantThings = _newRelevantThings;
             this.ingredientsOrdered = _ingredientsOrdered;
-            this.lf_adjacentRegionsAvailable = _adjacentRegionsAvailable;
-            this.lf_regionsProcessed = _regionsProcessed;
-            this.lf_rootCell = _rootCell;
-            this.p_bill = _bill;
-            this.p_pawn = _pawn;
-            this.p_billGiver = _billGiver;
-            this.p_chosen = _chosen;
-            this.lf_foundAll = _foundAll;
+        }
+
+        // called by reflection, connected by Patch_WorkGiver_DoBill
+        private void FetchLocalFields(int lf_adjacentRegionsAvailable,
+                                      int lf_regionsProcessed,
+                                      IntVec3 lf_rootCell,
+                                      Bill p_bill,
+                                      Pawn p_pawn,
+                                      Thing p_billGiver,
+                                      List<ThingCount> p_chosen,
+                                      bool lf_foundAll)
+        {
+            //local fields  
+            this.lf_adjacentRegionsAvailable = lf_adjacentRegionsAvailable;
+            this.lf_regionsProcessed = lf_regionsProcessed;
+            this.lf_rootCell = lf_rootCell;
+            this.p_bill = p_bill;
+            this.p_pawn = p_pawn;
+            this.p_billGiver = p_billGiver;
+            this.p_chosen = p_chosen;
+            this.lf_foundAll = lf_foundAll;
         }
 
         protected abstract bool RegionProcessor(Region reg);

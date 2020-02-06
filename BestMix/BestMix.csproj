@@ -59,7 +59,6 @@
     <Compile Include="HarmonyPatching.cs" />
     <Compile Include="MultiplayerSupport.cs" />
     <Compile Include="Patches\CustomHarmonyPatch.cs" />
-    <Compile Include="Patches\Example.cs" />
     <Compile Include="Patches\HarmonyPatchTool.cs" />
     <Compile Include="Patches\Old\Patch_WorkGiver_DoBill.cs" />
     <Compile Include="Patches\Patch_WorkGiver_DoBill.cs" />
