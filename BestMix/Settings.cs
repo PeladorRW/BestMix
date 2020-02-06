@@ -19,6 +19,8 @@ namespace BestMix
                 listing_Standard.Gap(gap);
                 listing_Standard.CheckboxLabeled("BestMix.AllowMealMakersOnly".Translate(), ref AllowMealMakersOnly, null);
                 listing_Standard.Gap(gap);
+                listing_Standard.CheckboxLabeled("BestMix.IncludeRegionLimiter".Translate(), ref IncludeRegionLimiter, null);
+                listing_Standard.Gap(gap);
 
                 listing_Standard.End();
             }
@@ -29,10 +31,12 @@ namespace BestMix
             base.ExposeData();
             Scribe_Values.Look<bool>(ref AllowBestMix, "AllowBestMix", true, false);
             Scribe_Values.Look<bool>(ref AllowMealMakersOnly, "AllowMealMakersOnly", true, false);
+            Scribe_Values.Look<bool>(ref IncludeRegionLimiter, "IncludeRegionLimiter", true, false);
         }
 
         public bool AllowBestMix = true;
         public bool AllowMealMakersOnly = true;
+        public bool IncludeRegionLimiter = true;
 
     }
 }

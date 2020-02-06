@@ -11,6 +11,68 @@ namespace BestMix
 {
     public class BestMixUtility
     {
+        public static bool BMixRegionIsInRange(Region r, Thing billGiver, Bill bill)
+        {
+            if (!(Controller.Settings.IncludeRegionLimiter))
+            {
+                return true;
+            }
+
+            if (!(IsValidForComp(billGiver)))
+            {
+                return true;
+            }
+
+            CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+            if (compBMix != null)
+            {
+                if (compBMix.CurMode == "DIS")
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+            
+            List<IntVec3> cells = r?.Cells.ToList<IntVec3>();
+            if ((cells != null) && (cells.Count > 0))
+            {
+                foreach (IntVec3 cell in cells)
+                {
+                    if (((float)((cell - billGiver.Position).LengthHorizontalSquared)) < ((float)(bill.ingredientSearchRadius * bill.ingredientSearchRadius)))
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        public static bool BMixFinishedStatus(bool foundAll, Thing billGiver, out bool finishNow)
+        {
+            finishNow = true;
+            if (billGiver is Pawn p)
+            {
+                return true;
+            }
+            if (IsValidForComp(billGiver))
+            {
+                CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+                if (compBMix != null)
+                {
+                    if (!(compBMix.CurMode == "DIS"))
+                    {
+                        finishNow = false;
+                        return true;
+                    }
+                }
+            }
+            return true;
+        }
+
         public static bool IsValidForComp(Thing thing)
         {
             if ((Controller.Settings.AllowBestMix) && (thing is Building bChk) && ((thing as Building).def.inspectorTabs.Contains(typeof(ITab_Bills))))
@@ -114,23 +176,14 @@ namespace BestMix
         {
             string BMixMode = "DIS";
             bool BMixDebugBench = false;
-            if (Controller.Settings.AllowBestMix)
+
+            if (IsValidForComp(billGiver))
             {
-                if (billGiver is Building b)
+                CompBestMix compBM = billGiver.TryGetComp<CompBestMix>();
+                if (compBM != null)
                 {
-                    CompBestMix compBM = billGiver.TryGetComp<CompBestMix>();
-                    if (compBM != null)
-                    {
-                        BMixMode = compBM.CurMode;
-                        BMixDebugBench = compBM.BMixDebug;
-                        if (Controller.Settings.AllowMealMakersOnly)
-                        {
-                            if (!((billGiver.def?.building != null && billGiver.def.building.isMealSource)))
-                            {
-                                BMixMode = "DIS";
-                            }
-                        }
-                    }
+                    BMixMode = compBM.CurMode;
+                    BMixDebugBench = compBM.BMixDebug;
                 }
             }
 
@@ -172,12 +225,12 @@ namespace BestMix
                         float num = 0f;
                         if (t2.def.useHitPoints)
                         {
-                            num = ((t2.MaxHitPoints - t2.HitPoints) / (Math.Max(1, t2.MaxHitPoints)));
+                            num = (((float)(t2.MaxHitPoints - t2.HitPoints)) / ((float)(Math.Max(1, t2.MaxHitPoints))));
                         }
                         float value = 0f;
                         if (t1.def.useHitPoints)
                         {
-                            value = ((t1.MaxHitPoints - t1.HitPoints) / (Math.Max(1, t1.MaxHitPoints)));
+                            value = (((float)(t1.MaxHitPoints - t1.HitPoints)) / ((float)(Math.Max(1, t1.MaxHitPoints))));
                         }
                         return (num.CompareTo(value));
                     };
@@ -217,8 +270,8 @@ namespace BestMix
                 case "BIT":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (t2.def.stackLimit / (Math.Max(1, t2.stackCount)));
-                        float value = (t1.def.stackLimit / (Math.Max(1, t1.stackCount)));
+                        float num = (((float)(t2.def.stackLimit)) / ((float)(Math.Max(1, t2.stackCount))));
+                        float value = (((float)(t1.def.stackLimit)) / ((float)(Math.Max(1, t1.stackCount))));
                         return (num.CompareTo(value));
                     };
                     break;
@@ -241,8 +294,8 @@ namespace BestMix
                 case "UGY":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (0f - t2.GetStatValue(StatDefOf.Beauty));
-                        float value = (0f - t1.GetStatValue(StatDefOf.Beauty));
+                        float num = (0f - t1.GetStatValue(StatDefOf.Beauty));
+                        float value = (0f - t2.GetStatValue(StatDefOf.Beauty));
                         return (num.CompareTo(value));
                     };
                     break;
@@ -349,7 +402,7 @@ namespace BestMix
                     stat = 0f;
                     if (thing.def.useHitPoints)
                     {
-                        stat = ((thing.MaxHitPoints - thing.HitPoints) / (Math.Max(1, thing.MaxHitPoints)));
+                        stat = (((float)(thing.MaxHitPoints - thing.HitPoints)) / ((float)(Math.Max(1, thing.MaxHitPoints))));
                     }
                     break;
                 case "VLC":
@@ -365,7 +418,7 @@ namespace BestMix
                     stat = (0f - thing.AmbientTemperature);
                     break;
                 case "BIT":
-                    stat = (thing.def.stackLimit / (Math.Max(1, thing.stackCount)));
+                    stat = ((float)thing.def.stackLimit / (float)(Math.Max(1, thing.stackCount)));
                     break;
                 case "RND":
                     stat = (((Math.Max(1, thing.def.stackLimit)) / (Math.Max(1, thing.def.stackLimit))) * RNDFloat());
