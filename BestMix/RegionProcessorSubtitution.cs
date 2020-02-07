@@ -26,6 +26,8 @@ namespace BestMix
 
         #endregion
 
+        
+
         protected List<ThingCount> chosenIngThings { get; set; } // 바뀜
         protected IntRange ReCheckFailedBillTicksRange { get; } // 안바뀜
 		protected string MissingMaterialsTranslated { get; } // 안바뀜
@@ -42,12 +44,12 @@ namespace BestMix
         protected Thing p_billGiver { get; set; }
         protected List<ThingCount> p_chosen { get; set; }
         protected bool lf_foundAll { get; set; }
+        
 
         //class option
         protected virtual bool ShouldOverrideValuesToOriginalClass { get; } = false;
         protected virtual bool CopyOnOverride { get; } = false;
 		//protected WorkGiver_DoBill.DefCountList availableCounts { get; set; }
-
 
         protected RegionProcessorSubtitution()
         {

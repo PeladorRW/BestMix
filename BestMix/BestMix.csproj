@@ -56,15 +56,17 @@
     <Compile Include="BestMix_Initializer.cs" />
     <Compile Include="CompBestMix.cs" />
     <Compile Include="Controller.cs" />
+    <Compile Include="CustomHarmonyPatch.cs" />
     <Compile Include="HarmonyPatching.cs" />
+    <Compile Include="HarmonyPatchTool.cs" />
     <Compile Include="MultiplayerSupport.cs" />
     <Compile Include="Patches\CustomHarmonyPatch.cs" />
     <Compile Include="Patches\HarmonyPatchTool.cs" />
     <Compile Include="Patches\Old\Patch_WorkGiver_DoBill.cs" />
     <Compile Include="Patches\Patch_WorkGiver_DoBill.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RegExample.cs" />
     <Compile Include="RegionProcessorSubtitution.cs" />
+    <Compile Include="RegionWork.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

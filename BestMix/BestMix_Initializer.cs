@@ -37,7 +37,7 @@ namespace BestMix
                 }
             }
 
-            //dependency injection
+            //dependency injection for custom region processor
             RegionProcessorSubtitution.Initialize(new RegionWork());
         }
 

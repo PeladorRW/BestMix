@@ -17,6 +17,7 @@ namespace BestMix
             // ==================== BestMix ==============================
             // Select Mode
             MP.RegisterSyncMethod(typeof(CompBestMix), nameof(CompBestMix.DoModeSelMenu));
+            MP.RegisterSyncMethod(typeof(CompBestMix), nameof(CompBestMix.ToggleDebug));
 
 
             // Add all Methods where there is Rand calls here

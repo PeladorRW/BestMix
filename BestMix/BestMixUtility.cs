@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -11,6 +12,68 @@ namespace BestMix
 {
     public class BestMixUtility
     {
+        public static bool BMixRegionIsInRange(Region r, Thing billGiver, Bill bill)
+        {
+            if (!(Controller.Settings.IncludeRegionLimiter))
+            {
+                return true;
+            }
+
+            if (!(IsValidForComp(billGiver)))
+            {
+                return true;
+            }
+
+            CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+            if (compBMix != null)
+            {
+                if (compBMix.CurMode == "DIS")
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+            
+            List<IntVec3> cells = r?.Cells.ToList<IntVec3>();
+            if ((cells != null) && (cells.Count > 0))
+            {
+                foreach (IntVec3 cell in cells)
+                {
+                    if (((float)((cell - billGiver.Position).LengthHorizontalSquared)) < ((float)(bill.ingredientSearchRadius * bill.ingredientSearchRadius)))
+                    {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        }
+
+        public static bool BMixFinishedStatus(bool foundAll, Thing billGiver, out bool finishNow)
+        {
+            finishNow = true;
+            if (billGiver is Pawn p)
+            {
+                return true;
+            }
+            if (IsValidForComp(billGiver))
+            {
+                CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+                if (compBMix != null)
+                {
+                    if (!(compBMix.CurMode == "DIS"))
+                    {
+                        finishNow = false;
+                        return true;
+                    }
+                }
+            }
+            return true;
+        }
+
         public static bool IsValidForComp(Thing thing)
         {
             if ((Controller.Settings.AllowBestMix) && (thing is Building bChk) && ((thing as Building).def.inspectorTabs.Contains(typeof(ITab_Bills))))
@@ -39,6 +102,16 @@ namespace BestMix
             list.AddDistinct("TMP");
             list.AddDistinct("FRZ");
             list.AddDistinct("RND");
+            list.AddDistinct("BIT");
+            list.AddDistinct("BTY");
+            list.AddDistinct("UGY");
+            list.AddDistinct("HVY");
+            list.AddDistinct("LGT");
+            list.AddDistinct("FLM");
+            list.AddDistinct("PTB");
+            list.AddDistinct("PTS");
+            list.AddDistinct("INH");
+            list.AddDistinct("INC");
             return list;
         }
 
@@ -56,6 +129,16 @@ namespace BestMix
                 case "TMP": BMixIconPath += "Warmest"; break;
                 case "FRZ": BMixIconPath += "Coldest"; break;
                 case "RND": BMixIconPath += "Random"; break;
+                case "BIT": BMixIconPath += "Fraction"; break;
+                case "BTY": BMixIconPath += "Beauty"; break;
+                case "UGY": BMixIconPath += "Duckling"; break;
+                case "HVY": BMixIconPath += "Heaviest"; break;
+                case "LGT": BMixIconPath += "Lightest"; break;
+                case "FLM": BMixIconPath += "Ignition"; break;
+                case "PTB": BMixIconPath += "ProtectBlunt"; break;
+                case "PTS": BMixIconPath += "ProtectSharp"; break;
+                case "INH": BMixIconPath += "InsulateHeat"; break;
+                case "INC": BMixIconPath += "InsulateCold"; break;
                 default: BMixIconPath += "Nearest"; break;
             }
             
@@ -75,34 +158,36 @@ namespace BestMix
                 case "RND": ModeDisplay = "BestMix.ModeRandomRND".Translate(); break;
                 case "TMP": ModeDisplay = "BestMix.ModeTemperatureTMP".Translate(); break;
                 case "FRZ": ModeDisplay = "BestMix.ModeTemperatureFRZ".Translate(); break;
+                case "BIT": ModeDisplay = "BestMix.ModeFractionBIT".Translate(); break;
+                case "BTY": ModeDisplay = "BestMix.ModeBeautyBTY".Translate(); break;
+                case "UGY": ModeDisplay = "BestMix.ModeBeautyUGY".Translate(); break;
+                case "HVY": ModeDisplay = "BestMix.ModeMassHVY".Translate(); break;
+                case "LGT": ModeDisplay = "BestMix.ModeMassLGT".Translate(); break;
+                case "FLM": ModeDisplay = "BestMix.ModeFlammableFLM".Translate(); break;
+                case "PTB": ModeDisplay = "BestMix.ModeProtectPTB".Translate(); break;
+                case "PTS": ModeDisplay = "BestMix.ModeProtectPTS".Translate(); break;
+                case "INH": ModeDisplay = "BestMix.ModeInsulateINH".Translate(); break;
+                case "INC": ModeDisplay = "BestMix.ModeInsulateINC".Translate(); break;
                 default: ModeDisplay = "BestMix.ModeDistanceDIS".Translate(); break;
             }
             return ModeDisplay;
         }
 
-        public static void GetBMixComparer(ref List<Thing> listToSort, Thing billGiver, IntVec3 rootCell)
+        public static Comparison<Thing> GetBMixComparer(Thing billGiver, IntVec3 rootCell)
         {
             string BMixMode = "DIS";
-            if (Controller.Settings.AllowBestMix)
+            bool BMixDebugBench = false;
+
+            if (IsValidForComp(billGiver))
             {
-                if (billGiver is Building b)
+                CompBestMix compBM = billGiver.TryGetComp<CompBestMix>();
+                if (compBM != null)
                 {
-                    CompBestMix compBM = billGiver.TryGetComp<CompBestMix>();
-                    if (compBM != null)
-                    {
-                        BMixMode = compBM.CurMode;
-                        if (Controller.Settings.AllowMealMakersOnly)
-                        {
-                            if (!((billGiver.def?.building != null && billGiver.def.building.isMealSource)))
-                            {
-                                BMixMode = "DIS";
-                            }
-                        }
-                    }
+                    BMixMode = compBM.CurMode;
+                    BMixDebugBench = compBM.BMixDebug;
                 }
             }
 
-            Log.Message("Mix Mode: " + BMixMode); // debug
             Comparison<Thing> comparison = null;
             switch (BMixMode)
             {
@@ -130,23 +215,23 @@ namespace BestMix
                         {
                             t2dtr = t2comp.TicksUntilRotAtCurrentTemp;
                         }
-                        float num = (maxdtr - t1dtr);
-                        float value = (maxdtr - t2dtr);
+                        float num = (maxdtr - t2dtr);
+                        float value = (maxdtr - t1dtr);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "HPT":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = 1f;
-                        if (t1.def.useHitPoints)
-                        {
-                            num = (t1.MaxHitPoints - t1.HitPoints) / t1.MaxHitPoints;
-                        }
-                        float value = 1f;
+                        float num = 0f;
                         if (t2.def.useHitPoints)
                         {
-                            value = (t2.MaxHitPoints - t2.HitPoints) / t2.MaxHitPoints;
+                            num = (((float)(t2.MaxHitPoints - t2.HitPoints)) / ((float)(Math.Max(1, t2.MaxHitPoints))));
+                        }
+                        float value = 0f;
+                        if (t1.def.useHitPoints)
+                        {
+                            value = (((float)(t1.MaxHitPoints - t1.HitPoints)) / ((float)(Math.Max(1, t1.MaxHitPoints))));
                         }
                         return (num.CompareTo(value));
                     };
@@ -154,24 +239,23 @@ namespace BestMix
                 case "VLC":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float maxVal = 99999999;
-                        float num = (maxVal - t1.MarketValue);
-                        float value = (maxVal - t2.MarketValue);
+                        float num = (0f - t2.MarketValue);
+                        float value = (0f - t1.MarketValue);
                         return (num.CompareTo(value));
                     };
                     break;
                 case "VLE":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.MarketValue;
-                        float value = t2.MarketValue;
+                        float num = t2.MarketValue;
+                        float value = t1.MarketValue;
                         return (num.CompareTo(value));
                     };
                     break;
                 case "TMP":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = t1.AmbientTemperature;
+                        float num = t2.AmbientTemperature;
                         float value = t1.AmbientTemperature;
                         return (num.CompareTo(value));
                     };
@@ -179,17 +263,96 @@ namespace BestMix
                 case "FRZ":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float maxVal = 999999;
-                        float num = (maxVal - t1.AmbientTemperature);
-                        float value = (maxVal - t1.AmbientTemperature);
+                        float num = (0f - t2.AmbientTemperature);
+                        float value = (0f - t1.AmbientTemperature);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "BIT":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = (((float)(t2.def.stackLimit)) / ((float)(Math.Max(1, t2.stackCount))));
+                        float value = (((float)(t1.def.stackLimit)) / ((float)(Math.Max(1, t1.stackCount))));
                         return (num.CompareTo(value));
                     };
                     break;
                 case "RND":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (t1.thingIDNumber / t1.thingIDNumber) * RNDFloat();
-                        float value = (t1.thingIDNumber / t1.thingIDNumber) * RNDFloat();
+                        float num = (((Math.Max(1, t2.def.stackLimit)) / (Math.Max(1, t2.def.stackLimit))) * RNDFloat());
+                        float value = (((Math.Max(1, t1.def.stackLimit)) / (Math.Max(1, t1.def.stackLimit))) * RNDFloat());
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "BTY":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.Beauty);
+                        float value = t1.GetStatValue(StatDefOf.Beauty);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "UGY":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = (0f - t1.GetStatValue(StatDefOf.Beauty));
+                        float value = (0f - t2.GetStatValue(StatDefOf.Beauty));
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "HVY":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.Mass);
+                        float value = t1.GetStatValue(StatDefOf.Mass);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "LGT":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = (0f - t2.GetStatValue(StatDefOf.Mass));
+                        float value = (0f - t1.GetStatValue(StatDefOf.Mass));
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "FLM":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.Flammability);
+                        float value = t1.GetStatValue(StatDefOf.Flammability);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "PTB":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "PTS":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "INH":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "INC":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
+                        float value = t1.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
                         return (num.CompareTo(value));
                     };
                     break;
@@ -202,8 +365,289 @@ namespace BestMix
                     };
                     break;
             }
-            listToSort.Sort(comparison);
-            return;
+
+            return comparison;
+        }
+
+        public static void BMixDebugList(List<Thing> list, Thing billGiver, IntVec3 rootCell)
+        {
+            if (Prefs.DevMode)
+            {
+                if (IsValidForComp(billGiver))
+                {
+                    CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+                    if (compBMix != null)
+                    {
+                        if (compBMix.BMixDebug)
+                        {
+                            if (list.Count > 0)
+                            {
+                                for (int i = 0; i < list.Count; i++)
+                                {
+                                    Thing thing = list[i];
+                                    string debugMsg = MakeDebugString(i, thing, billGiver, rootCell, compBMix.CurMode);
+                                    Log.Message(debugMsg, true);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static string MakeDebugString(int indx, Thing thing, Thing billGiver, IntVec3 rootCell, string BMixMode)
+        {
+            float stat = 0f;
+            switch(BMixMode)
+            {
+                case "DIS": stat = (thing.Position - rootCell).LengthHorizontalSquared; break;
+                case "DTR": float maxdtr = 72000000;
+                    float thingdtr = maxdtr;
+                    CompRottable thingcomp = thing.TryGetComp<CompRottable>();
+                    if (thingcomp != null)
+                    {
+                        thingdtr = thingcomp.TicksUntilRotAtCurrentTemp;
+                    }
+                    stat = (maxdtr - thingdtr);
+                    break;
+                case "HPT":
+                    stat = 0f;
+                    if (thing.def.useHitPoints)
+                    {
+                        stat = (((float)(thing.MaxHitPoints - thing.HitPoints)) / ((float)(Math.Max(1, thing.MaxHitPoints))));
+                    }
+                    break;
+                case "VLC":
+                    stat = (0f - thing.MarketValue);
+                    break;
+                case "VLE":
+                    stat = thing.MarketValue;
+                    break;
+                case "TMP":
+                    stat = thing.AmbientTemperature;
+                    break;
+                case "FRZ":
+                    stat = (0f - thing.AmbientTemperature);
+                    break;
+                case "BIT":
+                    stat = ((float)thing.def.stackLimit / (float)(Math.Max(1, thing.stackCount)));
+                    break;
+                case "RND":
+                    stat = (((Math.Max(1, thing.def.stackLimit)) / (Math.Max(1, thing.def.stackLimit))) * RNDFloat());
+                    break;
+                case "BTY":
+                    stat = thing.GetStatValue(StatDefOf.Beauty);
+                    break;
+                case "UGY":
+                    stat = (0f - thing.GetStatValue(StatDefOf.Beauty));
+                    break;
+                case "HVY":
+                    stat = thing.GetStatValue(StatDefOf.Mass);
+                    break;
+                case "LGT":
+                    stat = (0f - thing.GetStatValue(StatDefOf.Mass));
+                    break;
+                case "FLM":
+                    stat = thing.GetStatValue(StatDefOf.Flammability);
+                    break;
+                case "PTB":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
+                    break;
+                case "PTS":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                    break;
+                case "INH":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
+                    break;
+                case "INC":
+                    stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
+                    break;
+                default:
+                    stat = 0f;
+                    break;
+            }
+
+            string debugPos = "(" + thing.Position.x.ToString() + ", " + thing.Position.z.ToString() + ")";
+            string debugMsg = "Debug " + BMixMode + " " + indx.ToString() + " " + billGiver.ThingID + " " + thing.LabelShort + " " + debugPos + " " + stat.ToString("F2");
+            return debugMsg;
+        }
+
+        public static Predicate<Thing> BestMixValidator(Pawn pawn, Thing billGiver, Bill bill)
+        {
+            Predicate<Thing> Validator = (Thing t) => t.Spawned && !t.IsForbidden(pawn) 
+                                            && (float)(t.Position - billGiver.Position).LengthHorizontalSquared < bill.ingredientSearchRadius * bill.ingredientSearchRadius 
+                                            && bill.IsFixedOrAllowedIngredient(t) && bill.recipe.ingredients.Any((IngredientCount ingNeed) => ingNeed.filter.Allows(t)) 
+                                            && pawn.CanReserve(t);
+            return Validator;
+        }
+
+        private class BMixDefCountList
+        {
+            private List<ThingDef> defs = new List<ThingDef>();
+
+            private List<float> counts = new List<float>();
+
+            public int Count => defs.Count;
+
+            public float this[ThingDef def]
+            {
+                get
+                {
+                    int num = defs.IndexOf(def);
+                    if (num < 0)
+                    {
+                        return 0f;
+                    }
+                    return counts[num];
+                }
+                set
+                {
+                    int num = defs.IndexOf(def);
+                    if (num < 0)
+                    {
+                        defs.Add(def);
+                        counts.Add(value);
+                        num = defs.Count - 1;
+                    }
+                    else
+                    {
+                        counts[num] = value;
+                    }
+                    CheckRemove(num);
+                }
+            }
+
+            public float GetCount(int index)
+            {
+                return counts[index];
+            }
+
+            public void SetCount(int index, float val)
+            {
+                counts[index] = val;
+                CheckRemove(index);
+            }
+
+            public ThingDef GetDef(int index)
+            {
+                return defs[index];
+            }
+
+            private void CheckRemove(int index)
+            {
+                if (counts[index] == 0f)
+                {
+                    counts.RemoveAt(index);
+                    defs.RemoveAt(index);
+                }
+            }
+
+            public void Clear()
+            {
+                defs.Clear();
+                counts.Clear();
+            }
+
+            public void GenerateFrom(List<Thing> things)
+            {
+                Clear();
+                for (int i = 0; i < things.Count; i++)
+                {
+                    this[things[i].def] += things[i].stackCount;
+                }
+            }
+        }
+
+        internal static bool TryFindBestMixInSet(List<Thing> availableThings, Bill bill, List<ThingCount> chosen, List<IngredientCount> ingredientsOrdered)
+        {
+            if (bill.recipe.allowMixingIngredients)
+            {
+                return TryFindBestMixInSet_AllowMix(availableThings, bill, chosen);
+            }
+            return TryFindBestMixInSet_NoMix(availableThings, bill, chosen, ingredientsOrdered);
+        }
+
+        internal static bool TryFindBestMixInSet_NoMix(List<Thing> availableThings, Bill bill, List<ThingCount> chosen, List<IngredientCount> ingredientsOrdered)
+        {
+            BMixDefCountList availableCounts = new BMixDefCountList();
+            RecipeDef recipe = bill.recipe;
+            chosen.Clear();
+            availableCounts.Clear();
+            availableCounts.GenerateFrom(availableThings);
+            for (int i = 0; i < ingredientsOrdered.Count; i++)
+            {
+                IngredientCount ingredientCount = recipe.ingredients[i];
+                bool flag = false;
+                for (int j = 0; j < availableCounts.Count; j++)
+                {
+                    float num = ingredientCount.CountRequiredOfFor(availableCounts.GetDef(j), bill.recipe);
+                    if (num > availableCounts.GetCount(j) || !ingredientCount.filter.Allows(availableCounts.GetDef(j)) || (!ingredientCount.IsFixedIngredient && !bill.ingredientFilter.Allows(availableCounts.GetDef(j))))
+                    {
+                        continue;
+                    }
+                    for (int k = 0; k < availableThings.Count; k++)
+                    {
+                        if (availableThings[k].def != availableCounts.GetDef(j))
+                        {
+                            continue;
+                        }
+                        int num2 = availableThings[k].stackCount - ThingCountUtility.CountOf(chosen, availableThings[k]);
+                        if (num2 > 0)
+                        {
+                            int num3 = Mathf.Min(Mathf.FloorToInt(num), num2);
+                            ThingCountUtility.AddToList(chosen, availableThings[k], num3);
+                            num -= (float)num3;
+                            if (num < 0.001f)
+                            {
+                                flag = true;
+                                float count = availableCounts.GetCount(j);
+                                count -= (float)ingredientCount.CountRequiredOfFor(availableCounts.GetDef(j), bill.recipe);
+                                availableCounts.SetCount(j, count);
+                                break;
+                            }
+                        }
+                    }
+                    if (flag)
+                    {
+                        break;
+                    }
+                }
+                if (!flag)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        internal static bool TryFindBestMixInSet_AllowMix(List<Thing> availableThings, Bill bill, List<ThingCount> chosen)
+        {
+            chosen.Clear();
+            for (int i = 0; i < bill.recipe.ingredients.Count; i++)
+            {
+                IngredientCount ingredientCount = bill.recipe.ingredients[i];
+                float num = ingredientCount.GetBaseCount();
+                for (int j = 0; j < availableThings.Count; j++)
+                {
+                    Thing thing = availableThings[j];
+                    if (ingredientCount.filter.Allows(thing) && (ingredientCount.IsFixedIngredient || bill.ingredientFilter.Allows(thing)))
+                    {
+                        float num2 = bill.recipe.IngredientValueGetter.ValuePerUnitOf(thing.def);
+                        int num3 = Mathf.Min(Mathf.CeilToInt(num / num2), thing.stackCount);
+                        ThingCountUtility.AddToList(chosen, thing, num3);
+                        num -= (float)num3 * num2;
+                        if (num <= 0.0001f)
+                        {
+                            break;
+                        }
+                    }
+                }
+                if (num > 0.0001f)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
     }
