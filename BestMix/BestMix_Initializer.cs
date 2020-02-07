@@ -36,6 +36,9 @@ namespace BestMix
                     Log.Message(Msg);
                 }
             }
+
+            //dependency injection
+            RegionProcessorSubtitution.Initialize(new RegionWork());
         }
 
         public static bool TryAddBestMixComp(ThingDef def)
