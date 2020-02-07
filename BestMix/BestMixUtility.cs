@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEngine;
 using Verse;
 using Verse.AI;
 
@@ -172,7 +173,7 @@ namespace BestMix
             return ModeDisplay;
         }
 
-        public static void GetBMixComparer(ref List<Thing> listToSort, Thing billGiver, IntVec3 rootCell)
+        public static Comparison<Thing> GetBMixComparer(Thing billGiver, IntVec3 rootCell)
         {
             string BMixMode = "DIS";
             bool BMixDebugBench = false;
@@ -364,23 +365,34 @@ namespace BestMix
                     };
                     break;
             }
-            listToSort.Sort(comparison);
 
-            //list debugger
-            if (BMixDebugBench)
+            return comparison;
+        }
+
+        public static void BMixDebugList(List<Thing> list, Thing billGiver, IntVec3 rootCell)
+        {
+            if (Prefs.DevMode)
             {
-                if (listToSort.Count > 0)
+                if (IsValidForComp(billGiver))
                 {
-                    for (int i=0; i < listToSort.Count; i++)
+                    CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+                    if (compBMix != null)
                     {
-                        Thing thing = listToSort[i];
-                        string debugMsg = MakeDebugString(i, thing, billGiver, rootCell, BMixMode);
-                        Log.Message(debugMsg, true);
+                        if (compBMix.BMixDebug)
+                        {
+                            if (list.Count > 0)
+                            {
+                                for (int i = 0; i < list.Count; i++)
+                                {
+                                    Thing thing = list[i];
+                                    string debugMsg = MakeDebugString(i, thing, billGiver, rootCell, compBMix.CurMode);
+                                    Log.Message(debugMsg, true);
+                                }
+                            }
+                        }
                     }
                 }
             }
-
-            return;
         }
 
         public static string MakeDebugString(int indx, Thing thing, Thing billGiver, IntVec3 rootCell, string BMixMode)
@@ -458,6 +470,184 @@ namespace BestMix
             string debugPos = "(" + thing.Position.x.ToString() + ", " + thing.Position.z.ToString() + ")";
             string debugMsg = "Debug " + BMixMode + " " + indx.ToString() + " " + billGiver.ThingID + " " + thing.LabelShort + " " + debugPos + " " + stat.ToString("F2");
             return debugMsg;
+        }
+
+        public static Predicate<Thing> BestMixValidator(Pawn pawn, Thing billGiver, Bill bill)
+        {
+            Predicate<Thing> Validator = (Thing t) => t.Spawned && !t.IsForbidden(pawn) 
+                                            && (float)(t.Position - billGiver.Position).LengthHorizontalSquared < bill.ingredientSearchRadius * bill.ingredientSearchRadius 
+                                            && bill.IsFixedOrAllowedIngredient(t) && bill.recipe.ingredients.Any((IngredientCount ingNeed) => ingNeed.filter.Allows(t)) 
+                                            && pawn.CanReserve(t);
+            return Validator;
+        }
+
+        private class BMixDefCountList
+        {
+            private List<ThingDef> defs = new List<ThingDef>();
+
+            private List<float> counts = new List<float>();
+
+            public int Count => defs.Count;
+
+            public float this[ThingDef def]
+            {
+                get
+                {
+                    int num = defs.IndexOf(def);
+                    if (num < 0)
+                    {
+                        return 0f;
+                    }
+                    return counts[num];
+                }
+                set
+                {
+                    int num = defs.IndexOf(def);
+                    if (num < 0)
+                    {
+                        defs.Add(def);
+                        counts.Add(value);
+                        num = defs.Count - 1;
+                    }
+                    else
+                    {
+                        counts[num] = value;
+                    }
+                    CheckRemove(num);
+                }
+            }
+
+            public float GetCount(int index)
+            {
+                return counts[index];
+            }
+
+            public void SetCount(int index, float val)
+            {
+                counts[index] = val;
+                CheckRemove(index);
+            }
+
+            public ThingDef GetDef(int index)
+            {
+                return defs[index];
+            }
+
+            private void CheckRemove(int index)
+            {
+                if (counts[index] == 0f)
+                {
+                    counts.RemoveAt(index);
+                    defs.RemoveAt(index);
+                }
+            }
+
+            public void Clear()
+            {
+                defs.Clear();
+                counts.Clear();
+            }
+
+            public void GenerateFrom(List<Thing> things)
+            {
+                Clear();
+                for (int i = 0; i < things.Count; i++)
+                {
+                    this[things[i].def] += things[i].stackCount;
+                }
+            }
+        }
+
+        internal static bool TryFindBestMixInSet(List<Thing> availableThings, Bill bill, List<ThingCount> chosen, List<IngredientCount> ingredientsOrdered)
+        {
+            if (bill.recipe.allowMixingIngredients)
+            {
+                return TryFindBestMixInSet_AllowMix(availableThings, bill, chosen);
+            }
+            return TryFindBestMixInSet_NoMix(availableThings, bill, chosen, ingredientsOrdered);
+        }
+
+        internal static bool TryFindBestMixInSet_NoMix(List<Thing> availableThings, Bill bill, List<ThingCount> chosen, List<IngredientCount> ingredientsOrdered)
+        {
+            BMixDefCountList availableCounts = new BMixDefCountList();
+            RecipeDef recipe = bill.recipe;
+            chosen.Clear();
+            availableCounts.Clear();
+            availableCounts.GenerateFrom(availableThings);
+            for (int i = 0; i < ingredientsOrdered.Count; i++)
+            {
+                IngredientCount ingredientCount = recipe.ingredients[i];
+                bool flag = false;
+                for (int j = 0; j < availableCounts.Count; j++)
+                {
+                    float num = ingredientCount.CountRequiredOfFor(availableCounts.GetDef(j), bill.recipe);
+                    if (num > availableCounts.GetCount(j) || !ingredientCount.filter.Allows(availableCounts.GetDef(j)) || (!ingredientCount.IsFixedIngredient && !bill.ingredientFilter.Allows(availableCounts.GetDef(j))))
+                    {
+                        continue;
+                    }
+                    for (int k = 0; k < availableThings.Count; k++)
+                    {
+                        if (availableThings[k].def != availableCounts.GetDef(j))
+                        {
+                            continue;
+                        }
+                        int num2 = availableThings[k].stackCount - ThingCountUtility.CountOf(chosen, availableThings[k]);
+                        if (num2 > 0)
+                        {
+                            int num3 = Mathf.Min(Mathf.FloorToInt(num), num2);
+                            ThingCountUtility.AddToList(chosen, availableThings[k], num3);
+                            num -= (float)num3;
+                            if (num < 0.001f)
+                            {
+                                flag = true;
+                                float count = availableCounts.GetCount(j);
+                                count -= (float)ingredientCount.CountRequiredOfFor(availableCounts.GetDef(j), bill.recipe);
+                                availableCounts.SetCount(j, count);
+                                break;
+                            }
+                        }
+                    }
+                    if (flag)
+                    {
+                        break;
+                    }
+                }
+                if (!flag)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        internal static bool TryFindBestMixInSet_AllowMix(List<Thing> availableThings, Bill bill, List<ThingCount> chosen)
+        {
+            chosen.Clear();
+            for (int i = 0; i < bill.recipe.ingredients.Count; i++)
+            {
+                IngredientCount ingredientCount = bill.recipe.ingredients[i];
+                float num = ingredientCount.GetBaseCount();
+                for (int j = 0; j < availableThings.Count; j++)
+                {
+                    Thing thing = availableThings[j];
+                    if (ingredientCount.filter.Allows(thing) && (ingredientCount.IsFixedIngredient || bill.ingredientFilter.Allows(thing)))
+                    {
+                        float num2 = bill.recipe.IngredientValueGetter.ValuePerUnitOf(thing.def);
+                        int num3 = Mathf.Min(Mathf.CeilToInt(num / num2), thing.stackCount);
+                        ThingCountUtility.AddToList(chosen, thing, num3);
+                        num -= (float)num3 * num2;
+                        if (num <= 0.0001f)
+                        {
+                            break;
+                        }
+                    }
+                }
+                if (num > 0.0001f)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
     }

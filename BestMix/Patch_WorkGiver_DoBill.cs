@@ -1,85 +1,130 @@
-﻿using System.Collections.Generic;
-using Verse;
-using RimWorld;
-using Harmony;
+using System;
+using System.Collections.Generic;
 using System.Reflection;
-using System.Linq;
 using System.Reflection.Emit;
+using System.Linq;
 
-namespace BestMix
+using Harmony;
+
+using RimWorld;
+using Verse;
+
+namespace BestMix.Patches
 {
-    public class CustomAction
+    class Patch_WorkGiver_DoBill : CustomHarmonyPatch
     {
-        public delegate void RefAction<T1, T2, T3>(ref T1 t1, T2 t2, T3 t3);
-    }
-
-    public static class Patch_WorkGiver_DoBill
-    {
-        static MethodBase GetBillGiverRootCell = AccessTools.Method(typeof(WorkGiver_DoBill), "GetBillGiverRootCell");
-        static FieldInfo newReleventThingsFieldInfo = AccessTools.Field(typeof(WorkGiver_DoBill), "newRelevantThings");
-        static CustomAction.RefAction<List<Thing>, Thing, IntVec3> refAction;
-        static Thing billGiver;
-        static Pawn pawn;
-        static IntVec3 rootCell;
-        public static void DoPatch(HarmonyInstance HMinstance, CustomAction.RefAction<List<Thing>, Thing, IntVec3> refAction)
+        internal override void Patch(HarmonyInstance HMinstance)
         {
-            var innerType = AccessTools.FirstInner(typeof(WorkGiver_DoBill), t => t.Name.Contains("AnonStorey1"));
-            var innerMethod = AccessTools.FirstMethod(innerType, method => method.Name.Contains("m__3"));
-            var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_bracket_m__3");
-            HMinstance.Patch(innerMethod, null, null, new HarmonyMethod(transpiler));
-
             var original = AccessTools.Method(typeof(WorkGiver_DoBill), "TryFindBestBillIngredients");
-            var prefix = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Prefix_ResourceGetter");
-            HMinstance.Patch(original, new HarmonyMethod(prefix));
-
-            Patch_WorkGiver_DoBill.refAction = refAction;
+            var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_TryFindBestBillIngredients");
+            HMinstance.Patch(original, null, null, new HarmonyMethod(transpiler));
         }
-
-        static void Prefix_ResourceGetter(Pawn pawn, Thing billGiver)
+        
+        static IEnumerable<CodeInstruction> Transpiler_TryFindBestBillIngredients(IEnumerable<CodeInstruction> instructions)
         {
-            Patch_WorkGiver_DoBill.billGiver = billGiver;
-            Patch_WorkGiver_DoBill.pawn = pawn;
-        }
+            Type workGiverType = typeof(WorkGiver_DoBill);
+            FieldInfo RegionProcessorSubtitutionSingleton = AccessTools.Field(typeof(RegionProcessorSubtitution), "singleton");
+            var LdvirtftnMethodBase = AccessTools.Method(typeof(RegionProcessorSubtitution), "RegionProcessor");
+            var RegionProcessorType = AccessTools.TypeByName("RegionProcessor"); // hidden type
+            var RegionProcessorPointerCtor = AccessTools.Constructor(RegionProcessorType, new Type[] { typeof(object), typeof(IntPtr)});
+            //does nameof() can make an error? IDK
+            MethodInfo FetchLocalFields = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.FetchLocalFieldsMethodName);
+            MethodInfo FetchStaticFields = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.FetchStaticFieldsMethodName);
+            //h = hidden type
+            var c__AnonStorey1 = AccessTools.FirstInner(workGiverType, type => type.Name.Contains("AnonStorey1"));
+            var h_adjacentRegionsAvailable = AccessTools.Field(c__AnonStorey1, "adjacentRegionsAvailable");
+            var h_pawn = AccessTools.Field(c__AnonStorey1, "pawn");
+            var h_regionsProcessed = AccessTools.Field(c__AnonStorey1, "regionsProcessed");
+            var h_rootCell = AccessTools.Field(c__AnonStorey1, "rootCell");
+            var h_foundAll = AccessTools.Field(c__AnonStorey1, "foundAll");
+            var h_bill = AccessTools.Field(c__AnonStorey1, "bill");
+            var h_billGiver = AccessTools.Field(c__AnonStorey1, "billGiver");
+            var h_chosen = AccessTools.Field(c__AnonStorey1, "chosen");
+            //sf = static field
+            var sf_chosenIngThings = AccessTools.Field(workGiverType, "chosenIngThings");
+            var sf_relevantThings = AccessTools.Field(workGiverType, "relevantThings");
+            var sf_processedThings = AccessTools.Field(workGiverType, "processedThings");
+            var sf_newRelevantThings = AccessTools.Field(workGiverType, "newRelevantThings");
+            var sf_ingredientsOrdered = AccessTools.Field(workGiverType, "ingredientsOrdered");
 
-
-        static void MethodInvoker(ref List<Thing> newReleventThings)
-        {
-            var rootCell = (IntVec3)GetBillGiverRootCell.Invoke(null, new object[] { billGiver, pawn });
-            refAction.Invoke(ref newReleventThings, billGiver, rootCell);
-        }
-
-        static IEnumerable<CodeInstruction> Transpiler_bracket_m__3(IEnumerable<CodeInstruction> instructions)
-        {
-            var invokeMethod = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "MethodInvoker");
-            var insts = instructions.ToList();
-            int instsCount = insts.Count;
-            for (int i = 0; i < instsCount; i++)
+            List<CodeInstruction> insts = instructions.ToList();
+            int instsLength = insts.Count;
+            for(int i = 0; i < instsLength; i++)
             {
                 var inst = insts[i];
+                #region data field fetcher patch section
+                if(i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i+1].opcode == OpCodes.Ldftn)
+                { // entering IL_01A6 ldloc.0, line 1870
+                    #region local data field fetcher section
+                    //prepare for Fetchdata method parameters
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_adjacentRegionsAvailable); // index 0
+                    
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_regionsProcessed); // index 1
+                    
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_rootCell); // index 2
 
-                if (i > 0 && i < instsCount - 1 && insts[i - 1].opcode == OpCodes.Ble && inst.opcode == OpCodes.Ldarg_0 && insts[i + 1].operand?.ToString().Contains("<>m__4") == true)
-                { // entering line 739, IL, DnSpy
-                    yield return new CodeInstruction(OpCodes.Ldsflda, newReleventThingsFieldInfo);
-                    yield return new CodeInstruction(OpCodes.Call, invokeMethod);
-                    i += 6;
-                    continue; // jump to line 745, callvirt Sort. next invoking line is 746 ldsfld.
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_bill); // index 3
+
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_pawn); // index 4
+
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_billGiver); // index 5
+
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, h_chosen); // index 6
+
+                    yield return new CodeInstruction(OpCodes.Ldc_I4_0); // index 7
+
+                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
+                    yield return new CodeInstruction(OpCodes.Call, FetchLocalFields);
+                    #endregion
+
+                    #region static data field fetcher section
+                    //prepare for FetchStaticFields parameters
+                    yield return new CodeInstruction(OpCodes.Ldsfld, sf_chosenIngThings);
+                    yield return new CodeInstruction(OpCodes.Ldsfld, sf_relevantThings);
+                    yield return new CodeInstruction(OpCodes.Ldsfld, sf_processedThings);
+                    yield return new CodeInstruction(OpCodes.Ldsfld, sf_newRelevantThings);
+                    yield return new CodeInstruction(OpCodes.Ldsfld, sf_ingredientsOrdered);
+                    
+                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
+                    yield return new CodeInstruction(OpCodes.Call, FetchStaticFields);
+                    #endregion
                 }
+                #endregion
+
+                if(i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i+1].opcode == OpCodes.Ldftn)
+                { // entering IL_01A6 ldloc.0, line 1870
+                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
+                    yield return new CodeInstruction(OpCodes.Ldvirtftn, LdvirtftnMethodBase);
+                    yield return new CodeInstruction(OpCodes.Newobj, RegionProcessorPointerCtor);
+                    i += 2; // jump to IL_01AD, newobj, line 1873
+                    continue; // next line is IL_01B2, stloc.1, line 1873
+                }
+
+                if(i > 0 && inst.opcode == OpCodes.Ldsfld && insts[i-1].opcode == OpCodes.Call)
+                { // entering IL_01CB, ldsfld, line 1882
+                    //TODO : put UpdateData method in here.
+                    //TODO : put foundall if statement here. as IL codes.
+                    //if(i <)
+                }
+
 
                 yield return inst;
             }
-        }
 
-        //Patch Example
-        static void Patch()
-        {
-            DoPatch(null, Do_Work);
-        }
 
-        //Method Example
-        static void Do_Work(ref List<Thing> things, Thing thing, IntVec3 intVec3)
-        {
-
+            throw new NotImplementedException();
         }
-        //wrote by madeline#1941
     }
 }
+
+/*
+1) ldvirtftn으로 함수 포인터를 스택에 적재
+2) newobj RegionProcessor::.ctor를 통해서 RegionProcessor 객체 생성 -> 스택 적재
+*/
