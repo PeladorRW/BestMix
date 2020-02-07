@@ -15,15 +15,23 @@ namespace BestMix.Patches
     {
         internal override void Patch(HarmonyInstance HMinstance)
         {
-            var original = AccessTools.Method(typeof(WorkGiver_DoBill), "TryFindBestBillIngredients");
-            var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_TryFindBestBillIngredients");
-            HMinstance.Patch(original, null, null, new HarmonyMethod(transpiler));
+            try
+            {
+
+                var original = AccessTools.Method(typeof(WorkGiver_DoBill), "TryFindBestBillIngredients");
+                var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_TryFindBestBillIngredients");
+                HMinstance.Patch(original, null, null, new HarmonyMethod(transpiler));
+            }
+            catch(Exception ex)
+            {
+                Log.Error($"Exception while patching WorkGiver_DoBill !\n{ex}");
+            }
         }
         
         static IEnumerable<CodeInstruction> Transpiler_TryFindBestBillIngredients(IEnumerable<CodeInstruction> instructions)
         {
             Type workGiverType = typeof(WorkGiver_DoBill);
-            FieldInfo RegionProcessorSubtitutionSingleton = AccessTools.Field(typeof(RegionProcessorSubtitution), "singleton");
+            FieldInfo RegionProcessorSubtitutionSingleton = AccessTools.Field(typeof(RegionProcessorSubtitution), nameof(RegionProcessorSubtitution.singleton));
             var LdvirtftnMethodBase = AccessTools.Method(typeof(RegionProcessorSubtitution), "RegionProcessor");
             var RegionProcessorType = AccessTools.TypeByName("RegionProcessor"); // hidden type
             var RegionProcessorPointerCtor = AccessTools.Constructor(RegionProcessorType, new Type[] { typeof(object), typeof(IntPtr)});
@@ -53,9 +61,12 @@ namespace BestMix.Patches
             {
                 var inst = insts[i];
                 #region data field fetcher patch section
-                if(i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i+1].opcode == OpCodes.Ldftn)
+                bool is_IL_01A6 = i > 0 && i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i+1].opcode == OpCodes.Ldftn && insts[i-1].opcode == OpCodes.Call;
+                if(is_IL_01A6)
                 { // entering IL_01A6 ldloc.0, line 1870
                     #region local data field fetcher section
+                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
+
                     //prepare for Fetchdata method parameters
                     yield return new CodeInstruction(OpCodes.Ldloc_0);
                     yield return new CodeInstruction(OpCodes.Ldfld, h_adjacentRegionsAvailable); // index 0
@@ -80,11 +91,12 @@ namespace BestMix.Patches
 
                     yield return new CodeInstruction(OpCodes.Ldc_I4_0); // index 7
 
-                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
-                    yield return new CodeInstruction(OpCodes.Call, FetchLocalFields);
+                    yield return new CodeInstruction(OpCodes.Callvirt, FetchLocalFields);
                     #endregion
 
                     #region static data field fetcher section
+                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
+
                     //prepare for FetchStaticFields parameters
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_chosenIngThings);
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_relevantThings);
@@ -92,39 +104,38 @@ namespace BestMix.Patches
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_newRelevantThings);
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_ingredientsOrdered);
                     
-                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
-                    yield return new CodeInstruction(OpCodes.Call, FetchStaticFields);
+                    yield return new CodeInstruction(OpCodes.Callvirt, FetchStaticFields);
                     #endregion
-                }
-                #endregion
 
-                if(i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i+1].opcode == OpCodes.Ldftn)
-                { // entering IL_01A6 ldloc.0, line 1870
+                    #region Creating new RegionProcessor
                     yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
-                    yield return new CodeInstruction(OpCodes.Ldvirtftn, LdvirtftnMethodBase);
+                    yield return new CodeInstruction(OpCodes.Ldftn, LdvirtftnMethodBase);
                     yield return new CodeInstruction(OpCodes.Newobj, RegionProcessorPointerCtor);
+                    #endregion
                     i += 2; // jump to IL_01AD, newobj, line 1873
                     continue; // next line is IL_01B2, stloc.1, line 1873
                 }
-
-                if(i > 0 && inst.opcode == OpCodes.Ldsfld && insts[i-1].opcode == OpCodes.Call)
-                { // entering IL_01CB, ldsfld, line 1882
-                    //TODO : put UpdateData method in here.
-                    //TODO : put foundall if statement here. as IL codes.
-                    //if(i <)
-                }
-
+                #endregion
 
                 yield return inst;
             }
-
-
-            throw new NotImplementedException();
         }
     }
 }
 
+//self note to aid further coding if needed.
 /*
 1) ldvirtftn으로 함수 포인터를 스택에 적재
 2) newobj RegionProcessor::.ctor를 통해서 RegionProcessor 객체 생성 -> 스택 적재
+인스턴스 객체 호출하기
+스택(상)
+callvirt -> 중요! call 아님, callvirt 사용해야함
+parameter
+parameter
+...
+...
+parameter
+ldfld / ldsfld 등으로 인스턴스 스택에 적재
+스택(하)
+ldvirtftn 말고 ldftn 을 사용했어야함...
 */

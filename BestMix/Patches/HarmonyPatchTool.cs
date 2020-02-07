@@ -39,7 +39,7 @@ namespace BestMix.Patches
 
         static void EnsurePatchingOnlyOnce()
         {
-            if(!initialized)
+            if(initialized)
                 throw new Exception("trying to invoke PatchAll method twice!");
         }
     }

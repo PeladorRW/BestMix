@@ -12,7 +12,7 @@ namespace BestMix
     public abstract class RegionProcessorSubtitution
     {
         #region static methods and fields
-        public static RegionProcessorSubtitution singleton { get; private set; }
+        public static RegionProcessorSubtitution singleton;
         public static readonly string FetchLocalFieldsMethodName = nameof(FetchLocalFields);
         public static readonly string FetchStaticFieldsMethodName = nameof(FetchStaticFields);
 
