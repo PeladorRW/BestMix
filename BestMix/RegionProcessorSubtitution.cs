@@ -12,7 +12,7 @@ namespace BestMix
     public abstract class RegionProcessorSubtitution
     {
         #region static methods and fields
-        public static RegionProcessorSubtitution singleton { get; private set; }
+        public static RegionProcessorSubtitution singleton;
         public static readonly string FetchLocalFieldsMethodName = nameof(FetchLocalFields);
         public static readonly string FetchStaticFieldsMethodName = nameof(FetchStaticFields);
 
@@ -35,7 +35,6 @@ namespace BestMix
 		protected HashSet<Thing> processedThings { get; set; } // 바뀔수도
 		protected List<Thing> newRelevantThings { get; set; } // 바뀔수도
 		protected List<IngredientCount> ingredientsOrdered { get; set; } // 바뀜
-
 		protected List<Thing> tmpMedicine { get; set; } // 필요없음
         protected int lf_adjacentRegionsAvailable { get; set; }
         protected int lf_regionsProcessed { get; set; }
