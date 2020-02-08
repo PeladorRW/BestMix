@@ -17,7 +17,6 @@ namespace BestMix.Patches
         {
             try
             {
-
                 var original = AccessTools.Method(typeof(WorkGiver_DoBill), "TryFindBestBillIngredients");
                 var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_TryFindBestBillIngredients");
                 HMinstance.Patch(original, null, null, new HarmonyMethod(transpiler));
@@ -38,6 +37,7 @@ namespace BestMix.Patches
             //does nameof() can make an error? IDK
             MethodInfo FetchLocalFields = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.FetchLocalFieldsMethodName);
             MethodInfo FetchStaticFields = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.FetchStaticFieldsMethodName);
+            MethodInfo UpdateData = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.UpdateDataName);
             //h = hidden type
             var c__AnonStorey1 = AccessTools.FirstInner(workGiverType, type => type.Name.Contains("AnonStorey1"));
             var h_adjacentRegionsAvailable = AccessTools.Field(c__AnonStorey1, "adjacentRegionsAvailable");
@@ -109,13 +109,36 @@ namespace BestMix.Patches
 
                     #region Creating new RegionProcessor
                     yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
-                    yield return new CodeInstruction(OpCodes.Ldftn, LdvirtftnMethodBase);
+                    yield return new CodeInstruction(OpCodes.Dup);
+                    yield return new CodeInstruction(OpCodes.Ldvirtftn, LdvirtftnMethodBase);
                     yield return new CodeInstruction(OpCodes.Newobj, RegionProcessorPointerCtor);
                     #endregion
                     i += 2; // jump to IL_01AD, newobj, line 1873
                     continue; // next line is IL_01B2, stloc.1, line 1873
                 }
                 #endregion
+
+                if(inst.opcode == OpCodes.Call && inst.operand != null && inst.operand.ToString().Contains("BreadthFirstTraverse"))
+                { // entering IL_01C6 call, line 1881
+                    yield return inst;
+
+                    yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
+                    
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldflda, h_bill); // index 3
+
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldflda, h_pawn); // index 4
+
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldflda, h_billGiver); // index 5
+
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldflda, h_chosen); // index 6
+
+                    yield return new CodeInstruction(OpCodes.Callvirt, UpdateData);
+                    continue;
+                }
 
                 yield return inst;
             }
