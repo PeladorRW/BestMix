@@ -9,14 +9,26 @@ namespace BestMix
 {
     public class CompBestMix : ThingComp
     {
-        public string CurMode = "DIS";
+        public string CurMode;
         public bool BMixDebug = false;
+
+        public CompProperties_BestMix BMProps => (CompProperties_BestMix)props;
 
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Values.Look<string>(ref CurMode, "CurMode", "DIS", false);
             Scribe_Values.Look<bool>(ref BMixDebug, "BMixDebug", false, false);
+        }
+
+        public override void PostSpawnSetup(bool respawningAfterLoad)
+        {
+            base.PostSpawnSetup(respawningAfterLoad);
+
+            if (CurMode == null)
+            {
+                CurMode = BMProps.DefaultMode;
+            }
         }
 
         public override string CompInspectStringExtra()
@@ -113,6 +125,8 @@ namespace BestMix
 
     public class CompProperties_BestMix : CompProperties
     {
+        public string DefaultMode = "DIS";
+
         public CompProperties_BestMix()
         {
             compClass = typeof(CompBestMix);

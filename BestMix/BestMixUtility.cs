@@ -52,26 +52,28 @@ namespace BestMix
             return false;
         }
 
-        public static bool BMixFinishedStatus(bool foundAll, Thing billGiver, out bool finishNow)
+        public static bool BMixFinishedStatus(bool foundAll, Thing billGiver)
         {
-            finishNow = true;
-            if (billGiver is Pawn p)
+            if (foundAll)
             {
-                return true;
-            }
-            if (IsValidForComp(billGiver))
-            {
-                CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
-                if (compBMix != null)
+                if (billGiver is Pawn p)
                 {
-                    if (!(compBMix.CurMode == "DIS"))
-                    {
-                        finishNow = false;
+                    return true;
+                }
+                if (IsValidForComp(billGiver))
+                {
+                    if (billGiver.TryGetComp<CompBestMix>().CurMode == "DIS")
+                    { 
                         return true;
                     }
+                    return false;
+                }
+                else
+                {
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
 
         public static bool IsValidForComp(Thing thing)
@@ -369,10 +371,12 @@ namespace BestMix
             return comparison;
         }
 
-        public static void BMixDebugList(List<Thing> list, Thing billGiver, IntVec3 rootCell)
+        // Debug
+        internal static void BMixDebugList(List<Thing> list, Thing billGiver, IntVec3 rootCell)
         {
-            if (Prefs.DevMode)
+            if ((Prefs.DevMode) && (Controller.Settings.DebugSort))
             {
+                bool ignore = (Controller.Settings.DebugIgnore);
                 if (IsValidForComp(billGiver))
                 {
                     CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
@@ -386,9 +390,73 @@ namespace BestMix
                                 {
                                     Thing thing = list[i];
                                     string debugMsg = MakeDebugString(i, thing, billGiver, rootCell, compBMix.CurMode);
-                                    Log.Message(debugMsg, true);
+                                    Log.Message(debugMsg, ignore);
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        internal static void DebugChosenList(Thing billGiver, List<ThingCount> p_chosen)
+        {
+            if ((Prefs.DevMode) && (Controller.Settings.DebugChosen))
+            {
+                bool ignore = (Controller.Settings.DebugIgnore);
+                if (IsValidForComp(billGiver))
+                {
+                    CompBestMix compBestMix = billGiver.TryGetComp<CompBestMix>();
+                    if ((compBestMix != null) && (compBestMix.BMixDebug))
+                    {
+                        if (p_chosen != null)
+                        {
+                            if (p_chosen.Count > 0)
+                            {
+                                Log.Message((billGiver.Label + ", " + "BestMix.Chosen".Translate() + ":"), ignore);
+                                foreach (ThingCount TC in p_chosen)
+                                {
+                                    Thing thing = TC.Thing;
+                                    int count = TC.Count;
+                                    Log.Message((thing.Label + " , " + count.ToString()), ignore);
+                                }
+                            }
+                            else
+                            {
+                                Log.Message((billGiver.Label + ", " + "BestMix.NoChosen".Translate() + ":"), ignore);
+                            }
+                        }
+                        else
+                        {
+                            Log.Message((billGiver.Label + ", " + "BestMix.NullChosen".Translate() + ":"), ignore);
+                        }
+                    }
+                }
+            }
+        }
+
+        internal static void DebugFoundAll(Thing billGiver, bool foundAll)
+        {
+            if ((Prefs.DevMode) && (Controller.Settings.DebugFound))
+            {
+                bool ignore = (Controller.Settings.DebugIgnore);
+                if (IsValidForComp(billGiver))
+                {
+                    CompBestMix compBMix = billGiver.TryGetComp<CompBestMix>();
+                    if (compBMix != null)
+                    {
+                        if (compBMix.BMixDebug)
+                        {
+                            string debugMsg = billGiver.Label;
+                            if (foundAll)
+                            {
+                                debugMsg += ", " + "BestMix.FoundAll".Translate();
+                            }
+                            else
+                            {
+                                debugMsg += ", " + "BestMix.NotFoundAll".Translate();
+                            }
+                            Log.Message(debugMsg, ignore);
                         }
                     }
                 }
@@ -649,6 +717,7 @@ namespace BestMix
             }
             return true;
         }
+
 
     }
 }

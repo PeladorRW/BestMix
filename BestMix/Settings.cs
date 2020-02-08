@@ -21,6 +21,19 @@ namespace BestMix
                 listing_Standard.Gap(gap);
                 listing_Standard.CheckboxLabeled("BestMix.IncludeRegionLimiter".Translate(), ref IncludeRegionLimiter, null);
                 listing_Standard.Gap(gap);
+                if (Prefs.DevMode)
+                {
+                    listing_Standard.CheckboxLabeled("BestMix.DebugSort".Translate(), ref DebugSort, null);
+                    listing_Standard.Gap(gap);
+                    listing_Standard.CheckboxLabeled("BestMix.DebugChosen".Translate(), ref DebugChosen, null);
+                    listing_Standard.Gap(gap);
+                    listing_Standard.CheckboxLabeled("BestMix.DebugFound".Translate(), ref DebugFound, null);
+                    listing_Standard.Gap(gap);
+                    listing_Standard.Gap(gap);
+                    listing_Standard.CheckboxLabeled("BestMix.DebugIgnore".Translate(), ref DebugIgnore, null);
+                    listing_Standard.Gap(gap);
+
+                }
 
                 listing_Standard.End();
             }
@@ -32,12 +45,19 @@ namespace BestMix
             Scribe_Values.Look<bool>(ref AllowBestMix, "AllowBestMix", true, false);
             Scribe_Values.Look<bool>(ref AllowMealMakersOnly, "AllowMealMakersOnly", true, false);
             Scribe_Values.Look<bool>(ref IncludeRegionLimiter, "IncludeRegionLimiter", true, false);
+            Scribe_Values.Look<bool>(ref DebugSort, "DebugSort", false, false);
+            Scribe_Values.Look<bool>(ref DebugChosen, "DebugChosen", false, false);
+            Scribe_Values.Look<bool>(ref DebugFound, "DebugFound", false, false);
+            Scribe_Values.Look<bool>(ref DebugIgnore, "DebugIgnore", false, false);
         }
 
         public bool AllowBestMix = true;
         public bool AllowMealMakersOnly = true;
         public bool IncludeRegionLimiter = true;
-
+        public bool DebugSort = false;
+        public bool DebugChosen = false;
+        public bool DebugFound = false;
+        public bool DebugIgnore = false;
     }
 }
 
