@@ -15,6 +15,7 @@ namespace BestMix
         public static RegionProcessorSubtitution singleton;
         public static readonly string FetchLocalFieldsMethodName = nameof(FetchLocalFields);
         public static readonly string FetchStaticFieldsMethodName = nameof(FetchStaticFields);
+        public static readonly string UpdateDataName = nameof(UpdateData);
 
         public static void Initialize(RegionProcessorSubtitution instance)
         {
@@ -47,7 +48,7 @@ namespace BestMix
         
 
         //class option
-        protected virtual bool ShouldOverrideValuesToOriginalClass { get; } = false;
+        protected virtual bool ApplyToParameter { get; } = true;
         protected virtual bool CopyOnOverride { get; } = false;
 		//protected WorkGiver_DoBill.DefCountList availableCounts { get; set; }
 
@@ -96,30 +97,17 @@ namespace BestMix
         protected abstract bool RegionProcessor(Region reg);
 
         // called by reflection, connected by Patch_WorkGiver_DoBill
-        private void UpdateData(ref List<ThingCount> _chosenIngThings,
-                               ref List<Thing> _relevantThings,
-                               ref HashSet<Thing> _processedThings,
-                               ref List<Thing> _newReleventThings,
-                               ref List<IngredientCount> _ingredientsOrdered)
+        private void UpdateData(ref Bill bill,
+                                ref Pawn pawn,
+                                ref Thing billGiver,
+                                ref List<ThingCount> chosen)
         {
-            if(!ShouldOverrideValuesToOriginalClass)
-                return;
-
-            if(CopyOnOverride)
+            if(ApplyToParameter)
             {
-                _chosenIngThings = new List<ThingCount>(this.chosenIngThings);
-                _relevantThings = new List<Thing>(this.relevantThings);
-                _processedThings = new HashSet<Thing>(this.processedThings);
-                _newReleventThings = new List<Thing>(this.newRelevantThings);
-                _ingredientsOrdered = new List<IngredientCount>(this.ingredientsOrdered);
-            }
-            else
-            {
-                _chosenIngThings = this.chosenIngThings;
-                _relevantThings = this.relevantThings;
-                _processedThings = this.processedThings;
-                _newReleventThings = this.newRelevantThings;
-                _ingredientsOrdered = this.ingredientsOrdered;
+                bill = this.p_bill;
+                pawn = this.p_pawn;
+                billGiver = this.p_billGiver;
+                chosen = this.p_chosen;
             }
         }
     }
