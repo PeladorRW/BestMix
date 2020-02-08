@@ -109,7 +109,8 @@ namespace BestMix.Patches
 
                     #region Creating new RegionProcessor
                     yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
-                    yield return new CodeInstruction(OpCodes.Ldftn, LdvirtftnMethodBase);
+                    yield return new CodeInstruction(OpCodes.Dup);
+                    yield return new CodeInstruction(OpCodes.Ldvirtftn, LdvirtftnMethodBase);
                     yield return new CodeInstruction(OpCodes.Newobj, RegionProcessorPointerCtor);
                     #endregion
                     i += 2; // jump to IL_01AD, newobj, line 1873
