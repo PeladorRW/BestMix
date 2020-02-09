@@ -100,7 +100,8 @@ namespace BestMix
         private void UpdateData(ref Bill bill,
                                 ref Pawn pawn,
                                 ref Thing billGiver,
-                                ref List<ThingCount> chosen)
+                                ref List<ThingCount> chosen,
+                                ref bool foundAll)
         {
             if(ApplyToParameter)
             {
@@ -108,6 +109,7 @@ namespace BestMix
                 pawn = this.p_pawn;
                 billGiver = this.p_billGiver;
                 chosen = this.p_chosen;
+                foundAll = this.lf_foundAll;
             }
         }
     }

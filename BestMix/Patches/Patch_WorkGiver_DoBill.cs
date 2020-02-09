@@ -136,6 +136,9 @@ namespace BestMix.Patches
                     yield return new CodeInstruction(OpCodes.Ldloc_0);
                     yield return new CodeInstruction(OpCodes.Ldflda, h_chosen); // index 6
 
+                    yield return new CodeInstruction(OpCodes.Ldloc_0);
+                    yield return new CodeInstruction(OpCodes.Ldflda, h_foundAll);
+
                     yield return new CodeInstruction(OpCodes.Callvirt, UpdateData);
                     continue;
                 }
