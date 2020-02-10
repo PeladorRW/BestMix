@@ -8,7 +8,7 @@ namespace BestMix
     {
         public void DoWindowContents(Rect canvas)
         {
-            float gap = 12f;
+            float gap = 10f;
             Listing_Standard listing_Standard = new Listing_Standard();
             listing_Standard.ColumnWidth = canvas.width;
             listing_Standard.Begin(canvas);
@@ -19,20 +19,20 @@ namespace BestMix
                 listing_Standard.Gap(gap);
                 listing_Standard.CheckboxLabeled("BestMix.AllowMealMakersOnly".Translate(), ref AllowMealMakersOnly, null);
                 listing_Standard.Gap(gap);
-                listing_Standard.CheckboxLabeled("BestMix.IncludeRegionLimiter".Translate(), ref IncludeRegionLimiter, null);
-                listing_Standard.Gap(gap);
-                if (Prefs.DevMode)
+
+                if ((Prefs.DevMode) && (DebugMaster))
                 {
+                    listing_Standard.Gap(gap * 2);
+                    listing_Standard.CheckboxLabeled("BestMix.IncludeRegionLimiter".Translate(), ref IncludeRegionLimiter, null);
+                    listing_Standard.Gap(gap * 2);
                     listing_Standard.CheckboxLabeled("BestMix.DebugSort".Translate(), ref DebugSort, null);
                     listing_Standard.Gap(gap);
                     listing_Standard.CheckboxLabeled("BestMix.DebugChosen".Translate(), ref DebugChosen, null);
                     listing_Standard.Gap(gap);
                     listing_Standard.CheckboxLabeled("BestMix.DebugFound".Translate(), ref DebugFound, null);
-                    listing_Standard.Gap(gap);
-                    listing_Standard.Gap(gap);
+                    listing_Standard.Gap(gap * 2);
                     listing_Standard.CheckboxLabeled("BestMix.DebugIgnore".Translate(), ref DebugIgnore, null);
                     listing_Standard.Gap(gap);
-
                 }
 
                 listing_Standard.End();
@@ -43,7 +43,7 @@ namespace BestMix
         {
             base.ExposeData();
             Scribe_Values.Look<bool>(ref AllowBestMix, "AllowBestMix", true, false);
-            Scribe_Values.Look<bool>(ref AllowMealMakersOnly, "AllowMealMakersOnly", true, false);
+            Scribe_Values.Look<bool>(ref AllowMealMakersOnly, "AllowMealMakersOnly", false, false);
             Scribe_Values.Look<bool>(ref IncludeRegionLimiter, "IncludeRegionLimiter", true, false);
             Scribe_Values.Look<bool>(ref DebugSort, "DebugSort", false, false);
             Scribe_Values.Look<bool>(ref DebugChosen, "DebugChosen", false, false);
@@ -52,12 +52,14 @@ namespace BestMix
         }
 
         public bool AllowBestMix = true;
-        public bool AllowMealMakersOnly = true;
+        public bool AllowMealMakersOnly = false;
         public bool IncludeRegionLimiter = true;
+
         public bool DebugSort = false;
         public bool DebugChosen = false;
         public bool DebugFound = false;
         public bool DebugIgnore = false;
+        public bool DebugMaster = false;
     }
 }
 

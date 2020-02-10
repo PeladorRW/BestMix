@@ -36,7 +36,8 @@ namespace BestMix
             {
                 return true;
             }
-            
+
+            /*
             List<IntVec3> cells = r?.Cells.ToList<IntVec3>();
             if ((cells != null) && (cells.Count > 0))
             {
@@ -48,7 +49,36 @@ namespace BestMix
                     }
                 }
             }
-            
+            */
+
+            // optimised to region corners
+            Map map = billGiver?.Map;
+            if (map != null)
+            {
+                RegionGrid regions = map?.regionGrid; // *
+                if (regions != null)
+                {
+                    IntVec3 chkcell = IntVec3.Zero;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        switch (i)
+                        {
+                            case 0: chkcell = new IntVec3(r.extentsClose.minX, 0, r.extentsClose.minZ); break;
+                            case 3: chkcell = new IntVec3(r.extentsClose.minX, 0, r.extentsClose.maxZ); break;
+                            case 2: chkcell = new IntVec3(r.extentsClose.maxX, 0, r.extentsClose.minZ); break;
+                            case 1: chkcell = new IntVec3(r.extentsClose.maxX, 0, r.extentsClose.maxZ); break;
+                        }
+                        //if (chkcell.GetRegion(map) == r)
+                        if (regions.GetRegionAt_NoRebuild_InvalidAllowed(chkcell) == r) // * More direct check
+                        {
+                            if ((((float)(chkcell - billGiver.Position).LengthHorizontalSquared)) < ((float)(bill.ingredientSearchRadius * bill.ingredientSearchRadius)))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }   
             return false;
         }
 
@@ -281,8 +311,8 @@ namespace BestMix
                 case "RND":
                     comparison = delegate (Thing t1, Thing t2)
                     {
-                        float num = (((Math.Max(1, t2.def.stackLimit)) / (Math.Max(1, t2.def.stackLimit))) * RNDFloat());
-                        float value = (((Math.Max(1, t1.def.stackLimit)) / (Math.Max(1, t1.def.stackLimit))) * RNDFloat());
+                        float num = RNDFloat();
+                        float value = RNDFloat();
                         return (num.CompareTo(value));
                     };
                     break;
@@ -374,7 +404,7 @@ namespace BestMix
         // Debug
         internal static void BMixDebugList(List<Thing> list, Thing billGiver, IntVec3 rootCell)
         {
-            if ((Prefs.DevMode) && (Controller.Settings.DebugSort))
+            if ((Prefs.DevMode) && (Controller.Settings.DebugMaster) && (Controller.Settings.DebugSort))
             {
                 bool ignore = (Controller.Settings.DebugIgnore);
                 if (IsValidForComp(billGiver))
@@ -401,7 +431,7 @@ namespace BestMix
 
         internal static void DebugChosenList(Thing billGiver, List<ThingCount> p_chosen)
         {
-            if ((Prefs.DevMode) && (Controller.Settings.DebugChosen))
+            if ((Prefs.DevMode) && (Controller.Settings.DebugMaster) && (Controller.Settings.DebugChosen))
             {
                 bool ignore = (Controller.Settings.DebugIgnore);
                 if (IsValidForComp(billGiver))
@@ -437,7 +467,7 @@ namespace BestMix
 
         internal static void DebugFoundAll(Thing billGiver, bool foundAll)
         {
-            if ((Prefs.DevMode) && (Controller.Settings.DebugFound))
+            if ((Prefs.DevMode) && (Controller.Settings.DebugMaster) && (Controller.Settings.DebugFound))
             {
                 bool ignore = (Controller.Settings.DebugIgnore);
                 if (IsValidForComp(billGiver))

@@ -64,7 +64,7 @@ namespace BestMix
                         defaultDesc = "BestMix.SelectModeDesc".Translate(),
                         icon = ContentFinder<Texture2D>.Get(BMixIconPath)
                     };
-                    if (Prefs.DevMode)
+                    if ((Prefs.DevMode) && (Controller.Settings.DebugMaster))
                     {
                         string DebugIconPath = "UI/BestMix/DebugList";
                         yield return new Command_Toggle
