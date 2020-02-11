@@ -16,7 +16,6 @@ namespace BestMix
 #endif
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             HarmonyPatchTool.PatchAll(harmony);
-            //Patch_WorkGiver_DoBill.DoPatch(harmony, BestMixUtility.GetBMixComparer);
         }
     }
 }

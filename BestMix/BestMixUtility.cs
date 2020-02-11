@@ -71,7 +71,18 @@ namespace BestMix
                         //if (chkcell.GetRegion(map) == r)
                         if (regions.GetRegionAt_NoRebuild_InvalidAllowed(chkcell) == r) // * More direct check
                         {
-                            if ((((float)(chkcell - billGiver.Position).LengthHorizontalSquared)) < ((float)(bill.ingredientSearchRadius * bill.ingredientSearchRadius)))
+                            float scaleToCell = ((float)(chkcell - billGiver.Position).LengthHorizontalSquared);
+                            float scaleSearchRadius = ((float)(bill.ingredientSearchRadius * bill.ingredientSearchRadius));
+                            if (Controller.Settings.UseRadiusLimit)
+                            {
+                                float RadiusLimit = ((float)(Controller.Settings.RadiusLimit));
+                                float scaleLimit = (RadiusLimit * RadiusLimit);
+                                if (scaleLimit < scaleSearchRadius)
+                                {
+                                    scaleSearchRadius = scaleLimit;
+                                }
+                            }
+                            if (scaleToCell <= scaleSearchRadius)
                             {
                                 return true;
                             }
