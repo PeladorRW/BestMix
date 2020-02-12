@@ -12,6 +12,8 @@ namespace BestMix
 {
     public class BestMixUtility
     {
+        public static string ProtElectricStat = "StuffPower_Armor_Electric";
+
         public static bool BMixRegionIsInRange(Region r, Thing billGiver, Bill bill)
         {
             if (!(Controller.Settings.IncludeRegionLimiter))
@@ -134,6 +136,16 @@ namespace BestMix
             return Rand.Range(1f, 9999f);
         }
 
+        public static bool IsCEActive()
+        {
+            string CEModName = "Combat Extended";
+            if (ModLister.HasActiveModWithName(CEModName))
+            {
+                return true;
+            }
+            return false;
+        }
+
         public static List<string> BMixModes()
         {
             List<string> list = new List<string>();
@@ -153,6 +165,10 @@ namespace BestMix
             list.AddDistinct("FLM");
             list.AddDistinct("PTB");
             list.AddDistinct("PTS");
+            if (IsCEActive())
+            {
+                list.AddDistinct("PTE");
+            }
             list.AddDistinct("INH");
             list.AddDistinct("INC");
             return list;
@@ -180,6 +196,7 @@ namespace BestMix
                 case "FLM": BMixIconPath += "Ignition"; break;
                 case "PTB": BMixIconPath += "ProtectBlunt"; break;
                 case "PTS": BMixIconPath += "ProtectSharp"; break;
+                case "PTE": BMixIconPath += "ProtectElectric"; break;
                 case "INH": BMixIconPath += "InsulateHeat"; break;
                 case "INC": BMixIconPath += "InsulateCold"; break;
                 default: BMixIconPath += "Nearest"; break;
@@ -209,6 +226,7 @@ namespace BestMix
                 case "FLM": ModeDisplay = "BestMix.ModeFlammableFLM".Translate(); break;
                 case "PTB": ModeDisplay = "BestMix.ModeProtectPTB".Translate(); break;
                 case "PTS": ModeDisplay = "BestMix.ModeProtectPTS".Translate(); break;
+                case "PTE": ModeDisplay = "BestMix.ModeProtectPTE".Translate(); break;
                 case "INH": ModeDisplay = "BestMix.ModeInsulateINH".Translate(); break;
                 case "INC": ModeDisplay = "BestMix.ModeInsulateINC".Translate(); break;
                 default: ModeDisplay = "BestMix.ModeDistanceDIS".Translate(); break;
@@ -380,6 +398,20 @@ namespace BestMix
                     {
                         float num = t2.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
                         float value = t1.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "PTE":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = 0f;
+                        float value = 0f;
+                        StatDef protElectric = DefDatabase<StatDef>.GetNamed(ProtElectricStat, false);
+                        if (protElectric != null)
+                        {
+                            num = t2.GetStatValue(protElectric);
+                            value = t1.GetStatValue(protElectric);
+                        }
                         return (num.CompareTo(value));
                     };
                     break;
@@ -564,6 +596,13 @@ namespace BestMix
                     break;
                 case "PTS":
                     stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
+                    break;
+                case "PTE":
+                    StatDef protElectric = DefDatabase<StatDef>.GetNamed(ProtElectricStat, false);
+                    if (protElectric != null)
+                    {
+                        stat = thing.GetStatValue(protElectric);
+                    }
                     break;
                 case "INH":
                     stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
