@@ -171,6 +171,8 @@ namespace BestMix
             }
             list.AddDistinct("INH");
             list.AddDistinct("INC");
+            list.AddDistinct("WSP");
+            list.AddDistinct("WBT");
             return list;
         }
 
@@ -199,6 +201,8 @@ namespace BestMix
                 case "PTE": BMixIconPath += "ProtectElectric"; break;
                 case "INH": BMixIconPath += "InsulateHeat"; break;
                 case "INC": BMixIconPath += "InsulateCold"; break;
+                case "WSP": BMixIconPath += "Sharpest"; break;
+                case "WBT": BMixIconPath += "Bluntest"; break;
                 default: BMixIconPath += "Nearest"; break;
             }
             
@@ -229,6 +233,8 @@ namespace BestMix
                 case "PTE": ModeDisplay = "BestMix.ModeProtectPTE".Translate(); break;
                 case "INH": ModeDisplay = "BestMix.ModeInsulateINH".Translate(); break;
                 case "INC": ModeDisplay = "BestMix.ModeInsulateINC".Translate(); break;
+                case "WSP": ModeDisplay = "BestMix.ModeWeaponWSP".Translate(); break;
+                case "WBT": ModeDisplay = "BestMix.ModeWeaponWBT".Translate(); break;
                 default: ModeDisplay = "BestMix.ModeDistanceDIS".Translate(); break;
             }
             return ModeDisplay;
@@ -431,6 +437,22 @@ namespace BestMix
                         return (num.CompareTo(value));
                     };
                     break;
+                case "WSP":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.SharpDamageMultiplier);
+                        float value = t1.GetStatValue(StatDefOf.SharpDamageMultiplier);
+                        return (num.CompareTo(value));
+                    };
+                    break;
+                case "WBT":
+                    comparison = delegate (Thing t1, Thing t2)
+                    {
+                        float num = t2.GetStatValue(StatDefOf.BluntDamageMultiplier);
+                        float value = t1.GetStatValue(StatDefOf.BluntDamageMultiplier);
+                        return (num.CompareTo(value));
+                    };
+                    break;
                 default:
                     comparison = delegate (Thing t1, Thing t2)
                     {
@@ -558,61 +580,26 @@ namespace BestMix
                         stat = (((float)(thing.MaxHitPoints - thing.HitPoints)) / ((float)(Math.Max(1, thing.MaxHitPoints))));
                     }
                     break;
-                case "VLC":
-                    stat = (0f - thing.MarketValue);
-                    break;
-                case "VLE":
-                    stat = thing.MarketValue;
-                    break;
-                case "TMP":
-                    stat = thing.AmbientTemperature;
-                    break;
-                case "FRZ":
-                    stat = (0f - thing.AmbientTemperature);
-                    break;
-                case "BIT":
-                    stat = ((float)thing.def.stackLimit / (float)(Math.Max(1, thing.stackCount)));
-                    break;
-                case "RND":
-                    stat = (((Math.Max(1, thing.def.stackLimit)) / (Math.Max(1, thing.def.stackLimit))) * RNDFloat());
-                    break;
-                case "BTY":
-                    stat = thing.GetStatValue(StatDefOf.Beauty);
-                    break;
-                case "UGY":
-                    stat = (0f - thing.GetStatValue(StatDefOf.Beauty));
-                    break;
-                case "HVY":
-                    stat = thing.GetStatValue(StatDefOf.Mass);
-                    break;
-                case "LGT":
-                    stat = (0f - thing.GetStatValue(StatDefOf.Mass));
-                    break;
-                case "FLM":
-                    stat = thing.GetStatValue(StatDefOf.Flammability);
-                    break;
-                case "PTB":
-                    stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Blunt);
-                    break;
-                case "PTS":
-                    stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Sharp);
-                    break;
-                case "PTE":
-                    StatDef protElectric = DefDatabase<StatDef>.GetNamed(ProtElectricStat, false);
-                    if (protElectric != null)
-                    {
-                        stat = thing.GetStatValue(protElectric);
-                    }
-                    break;
-                case "INH":
-                    stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Heat);
-                    break;
-                case "INC":
-                    stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Cold);
-                    break;
-                default:
-                    stat = 0f;
-                    break;
+                case "VLC": stat = (0f - thing.MarketValue); break;
+                case "VLE": stat = thing.MarketValue; break;
+                case "TMP": stat = thing.AmbientTemperature; break;
+                case "FRZ": stat = (0f - thing.AmbientTemperature); break;
+                case "BIT": stat = ((float)thing.def.stackLimit / (float)(Math.Max(1, thing.stackCount))); break;
+                case "RND": stat = RNDFloat(); break;
+                case "BTY": stat = thing.GetStatValue(StatDefOf.Beauty); break;
+                case "UGY": stat = (0f - thing.GetStatValue(StatDefOf.Beauty)); break;
+                case "HVY": stat = thing.GetStatValue(StatDefOf.Mass); break;
+                case "LGT": stat = (0f - thing.GetStatValue(StatDefOf.Mass)); break;
+                case "FLM": stat = thing.GetStatValue(StatDefOf.Flammability); break;
+                case "PTB": stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Blunt); break;
+                case "PTS": stat = thing.GetStatValue(StatDefOf.StuffPower_Armor_Sharp); break;
+                case "PTE": StatDef protElectric = DefDatabase<StatDef>.GetNamed(ProtElectricStat, false);
+                    if (protElectric != null) { stat = thing.GetStatValue(protElectric); } break;
+                case "INH": stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Heat); break;
+                case "INC": stat = thing.GetStatValue(StatDefOf.StuffPower_Insulation_Cold); break;
+                case "WSP": stat = thing.GetStatValue(StatDefOf.SharpDamageMultiplier); break;
+                case "WBT": stat = thing.GetStatValue(StatDefOf.BluntDamageMultiplier); break;
+                default: stat = 0f; break;
             }
 
             string debugPos = "(" + thing.Position.x.ToString() + ", " + thing.Position.z.ToString() + ")";
