@@ -21,19 +21,19 @@ namespace BestMix.Patches
                 var transpiler = AccessTools.Method(typeof(Patch_WorkGiver_DoBill), "Transpiler_TryFindBestBillIngredients");
                 HMinstance.Patch(original, null, null, new HarmonyMethod(transpiler));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log.Error($"Exception while patching WorkGiver_DoBill !\n{ex}");
             }
         }
-        
+
         static IEnumerable<CodeInstruction> Transpiler_TryFindBestBillIngredients(IEnumerable<CodeInstruction> instructions)
         {
             Type workGiverType = typeof(WorkGiver_DoBill);
             FieldInfo RegionProcessorSubtitutionSingleton = AccessTools.Field(typeof(RegionProcessorSubtitution), nameof(RegionProcessorSubtitution.singleton));
             var LdvirtftnMethodBase = AccessTools.Method(typeof(RegionProcessorSubtitution), "RegionProcessor");
             var RegionProcessorType = AccessTools.TypeByName("RegionProcessor"); // hidden type
-            var RegionProcessorPointerCtor = AccessTools.Constructor(RegionProcessorType, new Type[] { typeof(object), typeof(IntPtr)});
+            var RegionProcessorPointerCtor = AccessTools.Constructor(RegionProcessorType, new Type[] { typeof(object), typeof(IntPtr) });
             //does nameof() can make an error? IDK
             MethodInfo FetchLocalFields = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.FetchLocalFieldsMethodName);
             MethodInfo FetchStaticFields = AccessTools.Method(typeof(RegionProcessorSubtitution), RegionProcessorSubtitution.FetchStaticFieldsMethodName);
@@ -57,12 +57,12 @@ namespace BestMix.Patches
 
             List<CodeInstruction> insts = instructions.ToList();
             int instsLength = insts.Count;
-            for(int i = 0; i < instsLength; i++)
+            for (int i = 0; i < instsLength; i++)
             {
                 var inst = insts[i];
                 #region data field fetcher patch section
-                bool is_IL_01A6 = i > 0 && i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i+1].opcode == OpCodes.Ldftn && insts[i-1].opcode == OpCodes.Call;
-                if(is_IL_01A6)
+                bool is_IL_01A6 = i > 0 && i < instsLength - 1 && inst.opcode == OpCodes.Ldloc_0 && insts[i + 1].opcode == OpCodes.Ldftn && insts[i - 1].opcode == OpCodes.Call;
+                if (is_IL_01A6)
                 { // entering IL_01A6 ldloc.0, line 1870
                     #region local data field fetcher section
                     yield return new CodeInstruction(OpCodes.Ldsfld, RegionProcessorSubtitutionSingleton);
@@ -70,10 +70,10 @@ namespace BestMix.Patches
                     //prepare for Fetchdata method parameters
                     yield return new CodeInstruction(OpCodes.Ldloc_0);
                     yield return new CodeInstruction(OpCodes.Ldfld, h_adjacentRegionsAvailable); // index 0
-                    
+
                     yield return new CodeInstruction(OpCodes.Ldloc_0);
                     yield return new CodeInstruction(OpCodes.Ldfld, h_regionsProcessed); // index 1
-                    
+
                     yield return new CodeInstruction(OpCodes.Ldloc_0);
                     yield return new CodeInstruction(OpCodes.Ldfld, h_rootCell); // index 2
 
@@ -103,7 +103,7 @@ namespace BestMix.Patches
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_processedThings);
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_newRelevantThings);
                     yield return new CodeInstruction(OpCodes.Ldsfld, sf_ingredientsOrdered);
-                    
+
                     yield return new CodeInstruction(OpCodes.Callvirt, FetchStaticFields);
                     #endregion
 

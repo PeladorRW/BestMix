@@ -35,8 +35,9 @@
     <Reference Include="0Harmony">
       <HintPath>..\Dependencies\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="0MultiplayerAPI">
-      <HintPath>..\Dependencies\0MultiplayerAPI.dll</HintPath>
+    <Reference Include="0MultiplayerAPI, Version=0.4.8.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>E:\SteamLibrary\steamapps\common\RimWorld\Mods\BestMix\Assemblies\0MultiplayerAPI.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\Dependencies\Assembly-Csharp.dll</HintPath>

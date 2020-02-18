@@ -16,7 +16,8 @@ namespace BestMix
 
             // ==================== BestMix ==============================
             // Select Mode
-            MP.RegisterSyncMethod(typeof(CompBestMix), nameof(CompBestMix.DoModeSelMenu));
+            //MP.RegisterSyncMethod(typeof(CompBestMix), nameof(CompBestMix.DoModeSelMenu));
+            MP.RegisterSyncMethod(typeof(CompBestMix), nameof(CompBestMix.SetBMixMode));
             MP.RegisterSyncMethod(typeof(CompBestMix), nameof(CompBestMix.ToggleDebug));
 
 

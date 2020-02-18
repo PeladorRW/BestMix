@@ -31,21 +31,27 @@ namespace BestMix
                 if (newRelevantThings.Count > 0 && lf_regionsProcessed > lf_adjacentRegionsAvailable)
                 {
                     Comparison<Thing> comparison = BestMixUtility.GetBMixComparer(p_billGiver, lf_rootCell);
-                    newRelevantThings.Sort(comparison);
-                    BestMixUtility.BMixDebugList(newRelevantThings, p_billGiver, lf_rootCell);
+                    //newRelevantThings.Sort(comparison);
                     relevantThings.AddRange(newRelevantThings);
+                    relevantThings.Sort(comparison);
+                    BestMixUtility.BMixDebugList(relevantThings, p_billGiver, lf_rootCell);
                     newRelevantThings.Clear();
 
                     if (BestMixUtility.TryFindBestMixInSet(relevantThings, p_bill, p_chosen, ingredientsOrdered))
                     {
-                        lf_foundAll = BestMixUtility.BMixFinishedStatus(lf_foundAll, p_billGiver, out bool finishNow);
-                        if (finishNow)
+                        lf_foundAll = true;
+                        bool finishNow = BestMixUtility.BMixFinishedStatus(lf_foundAll, p_billGiver);
+                        if ((lf_foundAll) && (finishNow))
                         {
+                            BestMixUtility.DebugChosenList(p_billGiver, p_chosen);
+                            BestMixUtility.DebugFoundAll(p_billGiver, lf_foundAll);
                             return true;
                         }
                     }
                 }
             }
+            BestMixUtility.DebugChosenList(p_billGiver, p_chosen);
+            BestMixUtility.DebugFoundAll(p_billGiver, lf_foundAll);
             return false;
         }
     }
