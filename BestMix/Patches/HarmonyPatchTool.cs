@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Harmony;
+using HarmonyLib;
 using System.Reflection;
 using System.Linq;
 
@@ -10,7 +10,7 @@ namespace BestMix.Patches
     public static class HarmonyPatchTool
     {
         static bool initialized = false;
-        public static void PatchAll(HarmonyInstance HMinstance)
+        public static void PatchAll(Harmony HMinstance)
         {
             EnsurePatchingOnlyOnce();
 

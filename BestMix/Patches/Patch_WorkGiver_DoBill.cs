@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Linq;
 
-using Harmony;
+using HarmonyLib;
 
 using RimWorld;
 using Verse;
@@ -13,7 +13,7 @@ namespace BestMix.Patches
 {
     class Patch_WorkGiver_DoBill : CustomHarmonyPatch
     {
-        internal override void Patch(HarmonyInstance HMinstance)
+        internal override void Patch(Harmony HMinstance)
         {
             try
             {

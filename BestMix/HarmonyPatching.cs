@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using Verse;
-using Harmony;
+using HarmonyLib;
 using BestMix.Patches;
 
 namespace BestMix
@@ -10,9 +10,9 @@ namespace BestMix
     {
         static HarmonyPatching()
         {
-            var harmony = HarmonyInstance.Create("com.Pelador.Rimworld.BestMix");
+            var harmony = new Harmony("com.Pelador.Rimworld.BestMix");
 #if DEBUG
-            HarmonyInstance.DEBUG = true;
+            Harmony.DEBUG = true;
 #endif
             harmony.PatchAll(Assembly.GetExecutingAssembly());
             HarmonyPatchTool.PatchAll(harmony);
