@@ -97,7 +97,7 @@ namespace BestMix
             string text = "BestMix.DoNothing".Translate();
             list.Add(new FloatMenuOption(text, delegate
             {
-                SetBMixMode(null, false);
+                SetBMixMode(this, null, false);
             },
             MenuOptionPriority.Default, null, null, 29f, null));
 
@@ -106,7 +106,7 @@ namespace BestMix
                 text = BestMixUtility.GetBMixModeDisplay(mode);
                 list.Add(new FloatMenuOption(text, delegate
                 {
-                    SetBMixMode(mode, true);
+                    SetBMixMode(this, mode, true);
                 },
                 MenuOptionPriority.Default, null, null, 29f, null));
             }
@@ -114,11 +114,12 @@ namespace BestMix
             Find.WindowStack.Add(new FloatMenu(sortedlist));
         }
 
-        public void SetBMixMode(string GizmoSel, bool edit)
+        public void SetBMixMode(CompBestMix CBM, string GizmoSel, bool edit)
         {
             if (edit)
             {
-                CurMode = GizmoSel;
+                MultiplayerSupport.MPLog("Gizmo mode:", GizmoSel);
+                CBM.CurMode = GizmoSel;
             }
         }
     }

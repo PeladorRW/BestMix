@@ -42,6 +42,14 @@ namespace BestMix
 
         static void FixRNGPre() => Rand.PushState(Find.TickManager.TicksAbs);
         static void FixRNGPos() => Rand.PopState();
+
+        internal static void MPLog(string from, string msg)
+        {
+            if (MP.enabled)
+            {
+                Log.Message(from + " " + msg);
+            }
+        }
     }
 }
 
