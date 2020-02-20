@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using Multiplayer.API;
 using System.Reflection;
 using Verse;
@@ -8,7 +8,7 @@ namespace BestMix
     [StaticConstructorOnStartup]
     static class MultiplayerSupport
     {
-        static HarmonyInstance harmony = HarmonyInstance.Create("rimworld.BestMix.multiplayersupport");
+        static Harmony harmony = new Harmony("rimworld.BestMix.multiplayersupport");
 
         static MultiplayerSupport()
         {
